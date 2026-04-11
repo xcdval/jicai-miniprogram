@@ -22,38 +22,27 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页",
-        "iconPath": "images/tab-home.png",
-        "selectedIconPath": "images/tab-home-active.png"
+        "text": "首页"
       },
       {
         "pagePath": "pages/assets/assets",
-        "text": "资产",
-        "iconPath": "images/tab-assets.png",
-        "selectedIconPath": "images/tab-assets-active.png"
+        "text": "资产"
       },
       {
         "pagePath": "pages/intelligence/intelligence",
-        "text": "情报",
-        "iconPath": "images/tab-intel.png",
-        "selectedIconPath": "images/tab-intel-active.png"
+        "text": "情报"
       },
       {
         "pagePath": "pages/analysis/analysis",
-        "text": "分析",
-        "iconPath": "images/tab-analysis.png",
-        "selectedIconPath": "images/tab-analysis-active.png"
+        "text": "分析"
       },
       {
         "pagePath": "pages/profile/profile",
-        "text": "我的",
-        "iconPath": "images/tab-profile.png",
-        "selectedIconPath": "images/tab-profile-active.png"
+        "text": "我的"
       }
     ]
   },
   "usingComponents": {
-    "nav-bar": "components/nav-bar/nav-bar",
     "tab-bar": "components/tab-bar/tab-bar"
   },
   "sitemapLocation": "sitemap.json"
