@@ -2,6 +2,9 @@
   "pages": [
     "pages/index/index",
     "pages/assets/assets",
+    "pages/funds/funds",
+    "pages/stocks/stocks",
+    "pages/deposits/deposits",
     "pages/intelligence/intelligence",
     "pages/analysis/analysis",
     "pages/profile/profile"

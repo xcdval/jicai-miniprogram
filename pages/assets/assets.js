@@ -27,7 +27,18 @@ Page({
   switchGroup(e) { this.setData({ activeGroup: e.currentTarget.dataset.id }); },
   toggleAmount() { assetService.toggleAmountVisibility(); this.refreshData(); },
   showAddOptions() { wx.showActionSheet({ itemList: ['手动录入', '截图导入(OCR)', '导入持仓'], success: (res) => { if(res.tapIndex===0) wx.showToast({title:'功能开发中',icon:'none'}); } }); },
-  gotoCategory() { wx.showToast({title:'功能开发中',icon:'none'}); },
+  gotoCategory(e) {
+    const type = e.currentTarget.dataset.type;
+    const pages = {
+      'fund': '/pages/funds/funds',
+      'stock': '/pages/stocks/stocks',
+      'deposit': '/pages/deposits/deposits'
+    };
+    const url = pages[type];
+    if (url) {
+      wx.navigateTo({ url });
+    }
+  },
   goBack() { wx.switchTab({ url: '/pages/index/index' }); },
   addGroup() { wx.showToast({ title: '添加分组功能开发中', icon: 'none' }); }
 });

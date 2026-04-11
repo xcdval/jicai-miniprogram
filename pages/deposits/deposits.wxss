@@ -1,0 +1,263 @@
+/* pages/deposits/deposits.wxss - 基于 jicai-fixed.html */
+
+/* 状态栏 */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 32rpx;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.08) 0%, rgba(255, 255, 255, 0.8) 100%);
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #1e293b;
+  border-bottom: 1rpx solid rgba(226, 232, 240, 0.6);
+}
+
+.status-time {
+  font-weight: 600;
+}
+
+.status-dots {
+  font-size: 20rpx;
+  letter-spacing: 2rpx;
+}
+
+/* 导航栏 */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32rpx;
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1rpx solid rgba(226, 232, 240, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.nav-title {
+  font-size: 34rpx;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #2563eb, #10b981);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.nav-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1rpx solid rgba(226, 232, 240, 0.8);
+  border-radius: 9999rpx;
+  font-size: 36rpx;
+  color: #2563eb;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+/* 搜索栏 */
+.search-section {
+  display: flex;
+  gap: 16rpx;
+  padding: 24rpx 32rpx;
+  background: #ffffff;
+}
+
+.search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 24rpx;
+  background: #f1f5f9;
+  border-radius: 9999rpx;
+}
+
+.search-icon {
+  font-size: 28rpx;
+  color: #94a3b8;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: #1e293b;
+}
+
+.search-input::placeholder {
+  color: #94a3b8;
+}
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 20rpx 28rpx;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  font-size: 26rpx;
+  font-weight: 600;
+  border-radius: 9999rpx;
+  box-shadow: 0 4rpx 16rpx rgba(37, 99, 235, 0.25);
+}
+
+/* 存款汇总卡片 */
+.deposit-summary-card {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  border-radius: 28rpx;
+  padding: 36rpx 32rpx;
+  margin: 24rpx 32rpx;
+  box-shadow: 0 10rpx 40rpx rgba(139, 92, 246, 0.25);
+  color: white;
+}
+
+.summary-header {
+  margin-bottom: 16rpx;
+}
+
+.summary-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.summary-amount {
+  font-size: 56rpx;
+  font-weight: 800;
+  margin-bottom: 24rpx;
+  font-family: 'SF Mono', 'Roboto Mono', monospace;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 20rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.2);
+}
+
+.summary-item {
+  text-align: center;
+}
+
+.item-label {
+  display: block;
+  font-size: 22rpx;
+  opacity: 0.75;
+  margin-bottom: 8rpx;
+}
+
+.item-value {
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+/* 区块标题 */
+.section-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1e293b;
+  padding: 0 32rpx;
+  margin: 32rpx 0 20rpx;
+}
+
+/* 存款列表 */
+.deposit-list {
+  padding: 0 32rpx 32rpx;
+}
+
+.deposit-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 28rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06), 0 2rpx 4rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid rgba(226, 232, 240, 0.8);
+}
+
+.deposit-icon {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  font-size: 32rpx;
+  font-weight: 700;
+  border-radius: 20rpx;
+  flex-shrink: 0;
+}
+
+.deposit-info {
+  flex: 1;
+}
+
+.deposit-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8rpx;
+}
+
+.deposit-meta {
+  font-size: 24rpx;
+  color: #64748b;
+  margin-bottom: 8rpx;
+}
+
+.deposit-date {
+  font-size: 22rpx;
+  color: #94a3b8;
+}
+
+.deposit-value {
+  text-align: right;
+}
+
+.deposit-amount {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8rpx;
+}
+
+.deposit-daily {
+  font-size: 22rpx;
+  color: #10b981;
+  font-weight: 500;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 32rpx;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 24rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #94a3b8;
+  margin-bottom: 32rpx;
+}
+
+.empty-btn {
+  padding: 20rpx 48rpx;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  font-size: 28rpx;
+  font-weight: 600;
+  border-radius: 9999rpx;
+}

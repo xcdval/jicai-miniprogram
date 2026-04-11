@@ -1,0 +1,95 @@
+<view class="container">
+  <!-- 状态栏 -->
+  <view class="status-bar" style="height: {{statusBarHeight}}px;">
+    <text class="status-time">9:41</text>
+    <text class="status-dots">●●●</text>
+  </view>
+
+  <!-- 导航栏 -->
+  <view class="nav-bar" style="height: {{navBarHeight}}px;">
+    <view class="nav-btn" bindtap="goBack">‹</view>
+    <view class="nav-title">股票列表</view>
+    <view class="nav-btn" bindtap="addStock">+</view>
+  </view>
+
+  <!-- 搜索栏 -->
+  <view class="search-section">
+    <view class="search-box">
+      <text class="search-icon">🔍</text>
+      <input type="text" placeholder="搜索股票名称/代码" class="search-input" bindinput="onSearchInput"/>
+    </view>
+    <view class="add-btn" bindtap="addStock">
+      <text>+</text>
+      <text>添加</text>
+    </view>
+  </view>
+
+  <!-- 分类标签 -->
+  <view class="sub-tabs">
+    <view class="sub-tab {{activeTab === 'all' ? 'active' : ''}}" data-tab="all" bindtap="switchTab">全部</view>
+    <view class="sub-tab {{activeTab === 'holding' ? 'active' : ''}}" data-tab="holding" bindtap="switchTab">持有中</view>
+    <view class="sub-tab {{activeTab === 'sold' ? 'active' : ''}}" data-tab="sold" bindtap="switchTab">已清仓</view>
+  </view>
+
+  <!-- 列表表头 -->
+  <view class="list-header">
+    <view class="header-col col-name">股票名称</view>
+    <view class="header-col col-price">成本/现价</view>
+    <view class="header-col col-value">市值/持仓</view>
+    <view class="header-col col-profit">盈亏</view>
+    <view class="header-col col-today">今日</view>
+  </view>
+
+  <!-- 股票列表 -->
+  <view class="stock-list">
+    <view class="stock-item" wx:for="{{stockList}}" wx:key="id" bindtap="viewStockDetail" data-id="{{item.id}}">
+      <view class="stock-main">
+        <view class="stock-icon">S</view>
+        <view class="stock-info">
+          <view class="stock-name">{{item.name}}</view>
+          <view class="stock-meta">{{item.code}} · {{item.platform}}</view>
+        </view>
+      </view>
+      <view class="stock-data">
+        <view class="data-col col-price">
+          <view class="data-value">{{item.costPrice}}</view>
+          <view class="data-sub">{{item.currentPrice}}</view>
+        </view>
+        <view class="data-col col-value">
+          <view class="data-value">{{item.marketValue}}</view>
+          <view class="data-sub">{{item.holdings}}股</view>
+        </view>
+        <view class="data-col col-profit">
+          <view class="data-value {{item.profit >= 0 ? 'rise' : 'fall'}}">{{item.profit >= 0 ? '+' : ''}}{{item.profit}}</view>
+          <view class="data-sub {{item.profitPercent >= 0 ? 'rise' : 'fall'}}">{{item.profitPercent >= 0 ? '+' : ''}}{{item.profitPercent}}%</view>
+        </view>
+        <view class="data-col col-today">
+          <view class="data-value {{item.todayChange >= 0 ? 'rise' : 'fall'}}">{{item.todayChange >= 0 ? '+' : ''}}{{item.todayChange}}%</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{stockList.length === 0}}">
+    <view class="empty-icon">📈</view>
+    <view class="empty-text">暂无股票数据</view>
+    <view class="empty-btn" bindtap="addStock">添加股票</view>
+  </view>
+
+  <!-- 汇总卡片 -->
+  <view class="summary-card" wx:if="{{stockList.length > 0}}">
+    <view class="summary-item">
+      <text class="summary-label">总市值</text>
+      <text class="summary-value">{{totalMarketValue}}</text>
+    </view>
+    <view class="summary-item">
+      <text class="summary-label">总盈亏</text>
+      <text class="summary-value {{totalProfit >= 0 ? 'rise' : 'fall'}}">{{totalProfit >= 0 ? '+' : ''}}{{totalProfit}}</text>
+    </view>
+    <view class="summary-item">
+      <text class="summary-label">今日盈亏</text>
+      <text class="summary-value {{todayProfit >= 0 ? 'rise' : 'fall'}}">{{todayProfit >= 0 ? '+' : ''}}{{todayProfit}}</text>
+    </view>
+  </view>
+</view>

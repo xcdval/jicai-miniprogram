@@ -1,0 +1,72 @@
+<view class="container">
+  <!-- 状态栏 -->
+  <view class="status-bar" style="height: {{statusBarHeight}}px;">
+    <text class="status-time">9:41</text>
+    <text class="status-dots">●●●</text>
+  </view>
+
+  <!-- 导航栏 -->
+  <view class="nav-bar" style="height: {{navBarHeight}}px;">
+    <view class="nav-btn" bindtap="goBack">‹</view>
+    <view class="nav-title">存款列表</view>
+    <view class="nav-btn" bindtap="addDeposit">+</view>
+  </view>
+
+  <!-- 搜索栏 -->
+  <view class="search-section">
+    <view class="search-box">
+      <text class="search-icon">🔍</text>
+      <input type="text" placeholder="搜索存款名称/银行" class="search-input" bindinput="onSearchInput"/>
+    </view>
+    <view class="add-btn" bindtap="addDeposit">
+      <text>+</text>
+      <text>添加</text>
+    </view>
+  </view>
+
+  <!-- 存款汇总卡片 -->
+  <view class="deposit-summary-card">
+    <view class="summary-header">
+      <text class="summary-title">💰 存款总览</text>
+    </view>
+    <view class="summary-amount">{{totalAmount}}</view>
+    <view class="summary-row">
+      <view class="summary-item">
+        <text class="item-label">笔数</text>
+        <text class="item-value">{{depositCount}}笔</text>
+      </view>
+      <view class="summary-item">
+        <text class="item-label">平均年化</text>
+        <text class="item-value">{{avgRate}}%</text>
+      </view>
+      <view class="summary-item">
+        <text class="item-label">预计年收益</text>
+        <text class="item-value">{{yearlyIncome}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 存款列表 -->
+  <view class="section-title">存款明细</view>
+  <view class="deposit-list">
+    <view class="deposit-item" wx:for="{{depositList}}" wx:key="id" bindtap="viewDepositDetail" data-id="{{item.id}}">
+      <view class="deposit-icon">D</view>
+      <view class="deposit-info">
+        <view class="deposit-name">{{item.name}}</view>
+        <view class="deposit-meta">{{item.bank}} · 年化 {{item.rate}}% · {{item.term}}</view>
+        <view class="deposit-date">到期日: {{item.dueDate}}</view>
+      </view>
+      <view class="deposit-value">
+        <view class="deposit-amount">{{item.amount}}</view>
+        <view class="deposit-daily">日收益 {{item.dailyIncome}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{depositList.length === 0}}">
+    <view class="empty-icon">🏦</view>
+    <view class="empty-text">暂无存款数据</view>
+    <view class="empty-btn" bindtap="addDeposit">添加存款</view>
+  </view>
+</view>
