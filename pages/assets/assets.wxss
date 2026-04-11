@@ -1,36 +1,289 @@
-/* pages/assets/assets.wxss */
-.nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 0 32rpx; margin-bottom: 16rpx; }
-.nav-title { font-size: 40rpx; font-weight: 700; color: #1e293b; }
-.nav-actions { display: flex; gap: 24rpx; }
-.nav-btn { width: 64rpx; height: 64rpx; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.8); border-radius: 16rpx; font-size: 32rpx; }
+/* pages/assets/assets.wxss - 基于 jicai-fixed.html */
 
-.asset-group-tabs { display: flex; gap: 16rpx; padding: 0 32rpx; margin-bottom: 24rpx; overflow-x: auto; }
-.group-tab { padding: 16rpx 32rpx; font-size: 28rpx; font-weight: 500; color: #64748b; background: #f1f5f9; border-radius: 9999rpx; white-space: nowrap; transition: all 0.3s ease; }
-.group-tab.active { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; }
+/* 状态栏 */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 32rpx;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.08) 0%, rgba(255, 255, 255, 0.8) 100%);
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #1e293b;
+  border-bottom: 1rpx solid rgba(226, 232, 240, 0.6);
+}
 
-.asset-total-card { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-radius: 32rpx; padding: 40rpx 32rpx; margin: 0 32rpx 24rpx; box-shadow: 0 8rpx 32rpx rgba(37,99,235,0.25); color: white; }
-.asset-total-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16rpx; }
-.asset-total-label { font-size: 28rpx; opacity: 0.9; }
-.eye-icon { width: 56rpx; height: 56rpx; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2); border-radius: 16rpx; font-size: 28rpx; }
-.asset-total-amount { font-size: 64rpx; font-weight: 700; margin-bottom: 32rpx; }
-.asset-total-stats { display: flex; gap: 48rpx; }
-.stat-item { display: flex; flex-direction: column; gap: 8rpx; }
-.stat-label { font-size: 22rpx; opacity: 0.8; }
-.stat-value { font-size: 32rpx; font-weight: 600; }
-.stat-value.rise { color: #86efac; }
-.stat-value.fall { color: #fecaca; }
+.status-time {
+  font-weight: 600;
+}
 
-.asset-category-list { padding: 0 32rpx; }
-.asset-category-item { display: flex; align-items: center; gap: 20rpx; padding: 28rpx; background: white; border-radius: 24rpx; margin-bottom: 20rpx; box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04); }
-.category-icon { width: 80rpx; height: 80rpx; display: flex; align-items: center; justify-content: center; border-radius: 24rpx; font-size: 40rpx; }
-.category-icon.fund { background: linear-gradient(135deg, #10b981, #059669); }
-.category-icon.stock { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.category-icon.deposit { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-.category-info { flex: 1; display: flex; flex-direction: column; gap: 4rpx; }
-.category-name { font-size: 30rpx; font-weight: 600; color: #1e293b; }
-.category-count { font-size: 22rpx; color: #94a3b8; }
-.category-value { display: flex; flex-direction: column; align-items: flex-end; gap: 4rpx; }
-.category-amount { font-size: 30rpx; font-weight: 600; color: #1e293b; }
-.category-change { font-size: 24rpx; font-weight: 500; }
-.category-change.rise { color: #ef4444; }
-.category-change.fall { color: #10b981; }
+.status-dots {
+  font-size: 20rpx;
+  letter-spacing: 2rpx;
+}
+
+/* 导航栏 */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32rpx;
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1rpx solid rgba(226, 232, 240, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.nav-title {
+  font-size: 34rpx;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #2563eb, #10b981);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.nav-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1rpx solid rgba(226, 232, 240, 0.8);
+  border-radius: 9999rpx;
+  font-size: 36rpx;
+  color: #2563eb;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+/* 分组标签栏 */
+.asset-group-tabs {
+  display: flex;
+  gap: 16rpx;
+  padding: 24rpx 32rpx;
+  overflow-x: auto;
+  background: #ffffff;
+  border-bottom: 1rpx solid rgba(226, 232, 240, 0.6);
+}
+
+.group-tab {
+  padding: 16rpx 32rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #64748b;
+  background: #f1f5f9;
+  border-radius: 9999rpx;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.group-tab.active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+}
+
+.group-tab.add-group {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1rpx dashed rgba(37, 99, 235, 0.4);
+  color: #2563eb;
+}
+
+.add-icon {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+/* 总资产卡片 */
+.asset-total-card {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-radius: 28rpx;
+  padding: 36rpx 32rpx;
+  margin: 24rpx 32rpx;
+  box-shadow: 0 10rpx 40rpx rgba(37, 99, 235, 0.25);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.asset-total-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 300rpx;
+  height: 300rpx;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.asset-total-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.asset-total-label {
+  font-size: 26rpx;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.asset-eye-icon {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  backdrop-filter: blur(10rpx);
+}
+
+.asset-total-amount {
+  font-size: 56rpx;
+  font-weight: 800;
+  margin-bottom: 28rpx;
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 1;
+  font-family: 'SF Mono', 'Roboto Mono', 'Courier New', monospace;
+}
+
+/* 统计信息 - 左右两列布局 */
+.asset-total-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 24rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.asset-stat-left,
+.asset-stat-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.asset-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.asset-stat-label {
+  font-size: 22rpx;
+  opacity: 0.75;
+}
+
+.asset-stat-value {
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.asset-stat-value.rise {
+  color: #86efac;
+}
+
+.asset-stat-value.fall {
+  color: #fecaca;
+}
+
+/* 资产分类列表 */
+.asset-category-list {
+  padding: 0 32rpx;
+}
+
+.asset-category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06), 0 2rpx 4rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid rgba(226, 232, 240, 0.8);
+}
+
+.asset-category-info {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.asset-category-icon {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20rpx;
+  font-size: 36rpx;
+}
+
+.asset-category-icon.fund {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.asset-category-icon.stock {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.asset-category-icon.deposit {
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.asset-category-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.asset-category-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.asset-category-count {
+  font-size: 22rpx;
+  color: #94a3b8;
+}
+
+.asset-category-value {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.asset-category-amount {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.asset-category-change {
+  font-size: 22rpx;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.asset-category-change.rise {
+  color: #ef4444;
+}
+
+.asset-category-change.fall {
+  color: #10b981;
+}

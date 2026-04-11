@@ -1,44 +1,71 @@
 <view class="container">
-  <view style="height: {{statusBarHeight}}px;"></view>
+  <!-- 状态栏 -->
+  <view class="status-bar" style="height: {{statusBarHeight}}px;">
+    <text class="status-time">9:41</text>
+    <text class="status-dots">●●●</text>
+  </view>
+
+  <!-- 导航栏 -->
   <view class="nav-bar" style="height: {{navBarHeight}}px;">
+    <view class="nav-btn" bindtap="goBack">‹</view>
     <view class="nav-title">资产</view>
-    <view class="nav-actions">
-      <view class="nav-btn" bindtap="showAddOptions">➕</view>
+    <view class="nav-btn" bindtap="showAddOptions">+</view>
+  </view>
+
+  <!-- 分组标签栏 -->
+  <view class="asset-group-tabs">
+    <view class="group-tab {{activeGroup === 'all' ? 'active' : ''}}" data-id="all" bindtap="switchGroup">全部</view>
+    <view class="group-tab {{activeGroup === item.id ? 'active' : ''}}" wx:for="{{groups}}" wx:key="id" wx:if="{{item.id !== 'all'}}" data-id="{{item.id}}" bindtap="switchGroup">{{item.name}}</view>
+    <view class="group-tab add-group" bindtap="addGroup">
+      <text class="add-icon">+</text>
+      <text>添加分组</text>
     </view>
   </view>
 
-  <view class="asset-group-tabs">
-    <view class="group-tab {{activeGroup === item.id ? 'active' : ''}}" wx:for="{{groups}}" wx:key="id" data-id="{{item.id}}" bindtap="switchGroup">{{item.name}}</view>
-  </view>
-
+  <!-- 总资产卡片 -->
   <view class="asset-total-card">
     <view class="asset-total-header">
       <text class="asset-total-label">总资产</text>
-      <view class="eye-icon" bindtap="toggleAmount">{{showAmount ? '👁️' : '🙈'}}</view>
+      <view class="asset-eye-icon" bindtap="toggleAmount">{{showAmount ? '👁' : '🙈'}}</view>
     </view>
-    <view class="asset-total-amount">{{showAmount ? totalAmount : '¥ ****'}}</view>
+    <view class="asset-total-amount">{{showAmount ? '¥ 370,579.00' : '¥ ****'}}</view>
     <view class="asset-total-stats">
-      <view class="stat-item">
-        <text class="stat-label">总收益</text>
-        <text class="stat-value {{totalProfit >= 0 ? 'rise' : 'fall'}}">{{showAmount ? totalProfitText : '****'}}</text>
+      <view class="asset-stat-left">
+        <view class="asset-stat-item">
+          <text class="asset-stat-label">总收益</text>
+          <text class="asset-stat-value rise">+12,580 +3.51%</text>
+        </view>
+        <view class="asset-stat-item">
+          <text class="asset-stat-label">持仓盈亏</text>
+          <text class="asset-stat-value rise">+8,420 +2.32%</text>
+        </view>
       </view>
-      <view class="stat-item">
-        <text class="stat-label">今日盈亏</text>
-        <text class="stat-value {{todayProfit >= 0 ? 'rise' : 'fall'}}">{{showAmount ? todayProfitText : '****'}}</text>
+      <view class="asset-stat-right">
+        <view class="asset-stat-item">
+          <text class="asset-stat-label">年化收益率</text>
+          <text class="asset-stat-value">+8.56%</text>
+        </view>
+        <view class="asset-stat-item">
+          <text class="asset-stat-label">今日盈亏</text>
+          <text class="asset-stat-value rise">+1,240 +0.34%</text>
+        </view>
       </view>
     </view>
   </view>
 
+  <!-- 资产分类总览 -->
   <view class="asset-category-list">
-    <view class="asset-category-item" wx:for="{{categoryList}}" wx:key="type" bindtap="gotoCategory">
-      <view class="category-icon {{item.type}}">{{item.icon}}</view>
-      <view class="category-info">
-        <text class="category-name">{{item.name}}</text>
-        <text class="category-count">{{item.count}}只持仓</text>
+    <view class="asset-category-item" wx:for="{{categoryList}}" wx:key="type" data-type="{{item.type}}" bindtap="gotoCategory">
+      <view class="asset-category-info">
+        <view class="asset-category-icon {{item.type}}">{{item.icon}}</view>
+        <view class="asset-category-detail">
+          <view class="asset-category-name">{{item.name}}</view>
+          <view class="asset-category-count">{{item.count}}只持仓</view>
+        </view>
       </view>
-      <view class="category-value">
-        <text class="category-amount">{{showAmount ? item.amount : '****'}}</text>
-        <text class="category-change {{item.change >= 0 ? 'rise' : 'fall'}}">{{item.change >= 0 ? '+' : ''}}{{item.change}}%</text>
+      <view class="asset-category-value">
+        <view class="asset-category-amount">{{showAmount ? item.amount : '****'}}</view>
+        <view class="asset-category-change {{item.change >= 0 ? 'rise' : 'fall'}}">{{item.change >= 0 ? '+' : ''}}{{item.change}}%</view>
       </view>
     </view>
   </view>

@@ -1,48 +1,72 @@
 <view class="container">
-  <view style="height: {{statusBarHeight}}px;"></view>
+  <!-- 状态栏 -->
+  <view class="status-bar" style="height: {{statusBarHeight}}px;">
+    <text class="status-time">9:41</text>
+    <text class="status-dots">●●●</text>
+  </view>
+
+  <!-- 导航栏 -->
   <view class="nav-bar" style="height: {{navBarHeight}}px;">
+    <view class="nav-btn" style="visibility: hidden;">‹</view>
     <view class="nav-title">持仓分析</view>
+    <view class="nav-btn" bindtap="refreshData">↻</view>
   </view>
 
-  <view class="health-card">
-    <view class="health-header">
-      <text class="health-label">持仓健康度</text>
-      <text class="health-score">{{healthScore}}</text>
+  <!-- 持仓健康度评分 -->
+  <view class="health-score-card">
+    <view class="health-circle">
+      <view class="health-score">{{healthScore}}</view>
     </view>
-    <view class="health-bar">
-      <view class="health-progress" style="width: {{healthScore}}%; background: {{healthColor}};"></view>
-    </view>
-    <view class="health-desc">{{healthDesc}}</view>
+    <view class="health-label">持仓健康度评分</view>
+    <view class="health-desc">0-100分，分数越高越健康</view>
   </view>
 
-  <view class="card">
-    <view class="card-header">
-      <text class="card-title">行业分布</text>
+  <!-- 持仓分析 -->
+  <view class="section-title">持仓分析</view>
+  <view class="analysis-card">
+    <view class="analysis-item">
+      <view class="analysis-header">
+        <text class="analysis-name">行业集中度</text>
+        <text class="analysis-level {{concentrationLevel === '较高' ? 'warning' : 'success'}}">{{concentrationLevel}}</text>
+      </view>
+      <view class="analysis-bar">
+        <view class="analysis-progress" style="width: {{concentrationValue}}%; background: {{concentrationLevel === '较高' ? '#f59e0b' : '#10b981'}};"></view>
+      </view>
+      <view class="analysis-tip">{{concentrationTip}}</view>
     </view>
-    <view class="card-body">
-      <view class="industry-list">
-        <view class="industry-item" wx:for="{{industryData}}" wx:key="name">
-          <view class="industry-color" style="background: {{item.color}};"></view>
-          <text class="industry-name">{{item.name}}</text>
-          <text class="industry-percent">{{item.value}}%</text>
-        </view>
+
+    <view class="analysis-item">
+      <view class="analysis-header">
+        <text class="analysis-name">持仓重叠度</text>
+        <text class="analysis-level {{overlapLevel === '低' ? 'success' : 'warning'}}">{{overlapLevel}}</text>
+      </view>
+      <view class="analysis-bar">
+        <view class="analysis-progress" style="width: {{overlapValue}}%; background: {{overlapLevel === '低' ? '#10b981' : '#f59e0b'}};"></view>
+      </view>
+      <view class="analysis-tip">{{overlapTip}}</view>
+    </view>
+  </view>
+
+  <!-- 优化建议 -->
+  <view class="section-title">优化建议</view>
+  <view class="suggestion-card">
+    <view class="suggestion-title">降低白酒行业集中度</view>
+    <view class="suggestion-content">建议将部分白酒仓位转换到科技、医疗等行业基金，分散投资风险</view>
+  </view>
+
+  <!-- 行业分布 -->
+  <view class="section-title">行业分布</view>
+  <view class="industry-card">
+    <view class="industry-list">
+      <view class="industry-item" wx:for="{{industryData}}" wx:key="name">
+        <view class="industry-color" style="background: {{item.color}};"></view>
+        <text class="industry-name">{{item.name}}</text>
+        <text class="industry-percent">{{item.value}}%</text>
       </view>
     </view>
   </view>
 
-  <view class="card">
-    <view class="card-header">
-      <text class="card-title">优化建议</text>
-    </view>
-    <view class="card-body">
-      <view class="suggestion-item {{item.type}}" wx:for="{{suggestions}}" wx:key="title">
-        <view class="suggestion-icon">{{item.type === 'warning' ? '⚠️' : item.type === 'success' ? '✅' : '💡'}}</view>
-        <view class="suggestion-content">
-          <text class="suggestion-title">{{item.title}}</text>
-          <text class="suggestion-desc">{{item.content}}</text>
-        </view>
-      </view>
-    </view>
-  </view>
+  <!-- 查看详细报告按钮 -->
+  <view class="btn-primary" bindtap="viewDetailReport">查看详细诊断报告</view>
 </view>
 <tab-bar activeIndex="3"></tab-bar>
