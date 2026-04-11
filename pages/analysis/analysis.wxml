@@ -1,0 +1,48 @@
+<view class="container">
+  <view style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-bar" style="height: {{navBarHeight}}px;">
+    <view class="nav-title">持仓分析</view>
+  </view>
+
+  <view class="health-card">
+    <view class="health-header">
+      <text class="health-label">持仓健康度</text>
+      <text class="health-score">{{healthScore}}</text>
+    </view>
+    <view class="health-bar">
+      <view class="health-progress" style="width: {{healthScore}}%; background: {{healthColor}};"></view>
+    </view>
+    <view class="health-desc">{{healthDesc}}</view>
+  </view>
+
+  <view class="card">
+    <view class="card-header">
+      <text class="card-title">行业分布</text>
+    </view>
+    <view class="card-body">
+      <view class="industry-list">
+        <view class="industry-item" wx:for="{{industryData}}" wx:key="name">
+          <view class="industry-color" style="background: {{item.color}};"></view>
+          <text class="industry-name">{{item.name}}</text>
+          <text class="industry-percent">{{item.value}}%</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-header">
+      <text class="card-title">优化建议</text>
+    </view>
+    <view class="card-body">
+      <view class="suggestion-item {{item.type}}" wx:for="{{suggestions}}" wx:key="title">
+        <view class="suggestion-icon">{{item.type === 'warning' ? '⚠️' : item.type === 'success' ? '✅' : '💡'}}</view>
+        <view class="suggestion-content">
+          <text class="suggestion-title">{{item.title}}</text>
+          <text class="suggestion-desc">{{item.content}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+<tab-bar activeIndex="3"></tab-bar>

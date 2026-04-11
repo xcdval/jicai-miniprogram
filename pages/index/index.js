@@ -1,0 +1,158 @@
+// pages/index/index.js
+const assetService = require('../../services/assetService');
+const format = require('../../utils/format');
+const mock = require('../../utils/mock');
+
+Page({
+  data: {
+    // 系统信息
+    statusBarHeight: 44,
+    navBarHeight: 44,
+
+    // 金额显示
+    showAmount: true,
+    totalAmount: 370579.00,
+    todayProfit: 1240.50,
+    totalProfit: 12580.00,
+    totalProfitPercent: 3.51,
+
+    // 市场行情
+    marketIndices: [],
+
+    // 资产配置
+    allocationData: [
+      { type: 'fund', name: '基金', icon: '📊', value: '¥ 154,617', percent: 42 },
+      { type: 'stock', name: '股票', icon: '📈', value: '¥ 115,962', percent: 31 },
+      { type: 'deposit', name: '存款', icon: '💵', value: '¥ 100,000', percent: 27 }
+    ],
+
+    // 快讯数据
+    newsFlash: []
+  },
+
+  onLoad() {
+    this.initSystemInfo();
+    this.loadData();
+  },
+
+  onShow() {
+    this.refreshData();
+  },
+
+  // 初始化系统信息
+  initSystemInfo() {
+    const systemInfo = wx.getSystemInfoSync();
+    const menuButtonInfo = wx.getMenuButtonBoundingClientRect();
+
+    this.setData({
+      statusBarHeight: systemInfo.statusBarHeight,
+      navBarHeight: (menuButtonInfo.top - systemInfo.statusBarHeight) * 2 + menuButtonInfo.height
+    });
+  },
+
+  // 加载数据
+  loadData() {
+    // 加载快讯数据
+    this.setData({
+      newsFlash: mock.newsFlash
+    });
+
+    // 加载市场行情
+    this.loadMarketData();
+
+    // 刷新资产统计
+    this.refreshData();
+  },
+
+  // 刷新数据
+  refreshData() {
+    const stats = assetService.calculateStatistics();
+    const showAmount = assetService.getAmountVisibility();
+
+    this.setData({
+      showAmount,
+      totalAmount: stats.totalValue,
+      todayProfit: stats.todayProfit,
+      totalProfit: stats.totalProfit,
+      totalProfitPercent: stats.totalProfitPercent
+    });
+
+    // 更新资产配置显示
+    this.updateAllocationDisplay(stats.categoryStats);
+  },
+
+  // 更新资产配置显示
+  updateAllocationDisplay(categoryStats) {
+    const total = Object.values(categoryStats).reduce((sum, cat) => sum + cat.value, 0);
+
+    const allocationData = [
+      {
+        type: 'fund',
+        name: '基金',
+        icon: '📊',
+        value: format.formatAmount(categoryStats.FUND?.value || 0),
+        percent: total > 0 ? Math.round((categoryStats.FUND?.value || 0) / total * 100) : 0
+      },
+      {
+        type: 'stock',
+        name: '股票',
+        icon: '📈',
+        value: format.formatAmount(categoryStats.STOCK?.value || 0),
+        percent: total > 0 ? Math.round((categoryStats.STOCK?.value || 0) / total * 100) : 0
+      },
+      {
+        type: 'deposit',
+        name: '存款',
+        icon: '💵',
+        value: format.formatAmount(categoryStats.DEPOSIT?.value || 0),
+        percent: total > 0 ? Math.round((categoryStats.DEPOSIT?.value || 0) / total * 100) : 0
+      }
+    ];
+
+    this.setData({ allocationData });
+  },
+
+  // 加载市场行情（模拟数据）
+  loadMarketData() {
+    this.setData({
+      marketIndices: mock.marketData.indices
+    });
+  },
+
+  // 切换金额显示
+  toggleAmountVisibility() {
+    const showAmount = assetService.toggleAmountVisibility();
+    this.setData({ showAmount });
+  },
+
+  // 页面跳转
+  gotoAssets() {
+    wx.switchTab({ url: '/pages/assets/assets' });
+  },
+
+  gotoIntelligence() {
+    wx.switchTab({ url: '/pages/intelligence/intelligence' });
+  },
+
+  gotoAnalysis() {
+    wx.switchTab({ url: '/pages/analysis/analysis' });
+  },
+
+  // 添加资产
+  addAsset() {
+    wx.navigateTo({
+      url: '/pages/assets/assets?action=add'
+    });
+  },
+
+  // 通知和设置
+  onNotificationTap() {
+    wx.showToast({ title: '暂无新通知', icon: 'none' });
+  },
+
+  onSettingsTap() {
+    wx.navigateTo({
+      url: '/pages/profile/profile'
+    });
+  }
+});

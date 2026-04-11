@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "情报",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "news-flash": "/components/news-flash/news-flash",
+    "tab-bar": "/components/tab-bar/tab-bar"
+  }
+}

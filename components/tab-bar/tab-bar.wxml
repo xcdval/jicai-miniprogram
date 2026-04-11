@@ -1,0 +1,18 @@
+<view class="tab-bar" style="padding-bottom: {{safeAreaBottom}}px;">
+  <view class="tab-bar-bg"></view>
+  <view class="tab-bar-content">
+    <view
+      class="tab-item {{activeIndex === index ? 'active' : ''}}"
+      wx:for="{{list}}"
+      wx:key="index"
+      data-index="{{index}}"
+      bindtap="onTabTap"
+    >
+      <view class="tab-icon">
+        <text wx:if="{{activeIndex === index}}">{{item.activeIcon}}</text>
+        <text wx:else>{{item.icon}}</text>
+      </view>
+      <text class="tab-text">{{item.text}}</text>
+    </view>
+  </view>
+</view>

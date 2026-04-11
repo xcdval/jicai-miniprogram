@@ -1,0 +1,109 @@
+<view class="container">
+  <!-- 状态栏占位 -->
+  <view style="height: {{statusBarHeight}}px;"></view>
+
+  <!-- 导航栏 -->
+  <view class="nav-bar" style="height: {{navBarHeight}}px;">
+    <view class="nav-title">集财</view>
+    <view class="nav-actions">
+      <view class="nav-btn" bindtap="onNotificationTap">🔔</view>
+      <view class="nav-btn" bindtap="onSettingsTap">⚙️</view>
+    </view>
+  </view>
+
+  <!-- 资产总览卡片 -->
+  <view class="asset-overview-card">
+    <view class="overview-header">
+      <view class="overview-label">总资产</view>
+      <view class="eye-icon" bindtap="toggleAmountVisibility">{{showAmount ? '👁️' : '🙈'}}</view>
+    </view>
+
+    <view class="overview-amount">{{displayAmount}}</view>
+
+    <view class="overview-stats">
+      <view class="stat-item">
+        <view class="stat-label">今日盈亏</view>
+        <view class="stat-value {{todayProfit >= 0 ? 'rise' : 'fall'}}">{{todayProfitText}}</view>
+      </view>
+      <view class="stat-item">
+        <view class="stat-label">总收益</view>
+        <view class="stat-value {{totalProfit >= 0 ? 'rise' : 'fall'}}">{{totalProfitText}}</view>
+      </view>
+    </view>
+
+    <!-- 市场行情滚动 -->
+    <view class="market-ticker">
+      <view class="ticker-wrapper">
+        <view
+          class="ticker-item {{item.changePercent >= 0 ? 'rise' : 'fall'}}"
+          wx:for="{{marketIndices}}"
+          wx:key="code"
+        >
+          <text class="ticker-name">{{item.name}}</text>
+          <text class="ticker-change">{{item.changePercent > 0 ? '+' : ''}}{{item.changePercent}}%</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 资产配置概览 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="card-title">资产配置</text>
+      <text class="card-more" bindtap="gotoAssets">查看详情 →</text>
+    </view>
+    <view class="card-body">
+      <view class="allocation-grid">
+        <view
+          class="allocation-item {{item.type}}"
+          wx:for="{{allocationData}}"
+          wx:key="type"
+          bindtap="gotoAssets"
+        >
+          <view class="allocation-icon">{{item.icon}}</view>
+          <view class="allocation-info">
+            <text class="allocation-name">{{item.name}}</text>
+            <text class="allocation-value">{{item.value}}</text>
+          </view>
+          <view class="allocation-percent">{{item.percent}}%</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 市场快讯 -->
+  <news-flash
+    newsList="{{newsFlash}}"
+    bind:viewMore="gotoIntelligence"
+  ></news-flash>
+
+  <!-- 快捷功能 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="card-title">快捷功能</text>
+    </view>
+    <view class="card-body">
+      <view class="quick-grid">
+        <view class="quick-item" bindtap="gotoAssets">
+          <view class="quick-icon fund">💰</view>
+          <text class="quick-label">资产</text>
+        </view>
+        <view class="quick-item" bindtap="gotoIntelligence">
+          <view class="quick-icon intel">📰</view>
+          <text class="quick-label">情报</text>
+        </view>
+        <view class="quick-item" bindtap="gotoAnalysis">
+          <view class="quick-icon analysis">📊</view>
+          <text class="quick-label">分析</text>
+        </view>
+        <view class="quick-item" bindtap="addAsset">
+          <view class="quick-icon add">➕</view>
+          <text class="quick-label">添加</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 底部导航栏 -->
+<tab-bar activeIndex="{{0}}"></tab-bar>

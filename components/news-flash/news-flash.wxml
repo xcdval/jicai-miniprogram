@@ -1,0 +1,48 @@
+<view class="news-flash-card">
+  <view class="news-flash-header">
+    <view class="news-flash-title">
+      <text class="news-flash-icon">⚡</text>
+      <text>市场快讯</text>
+      <view class="news-live-badge">LIVE</view>
+    </view>
+    <view class="news-flash-filter">
+      <text
+        class="news-filter-item {{activeFilter === item.value ? 'active' : ''}}"
+        wx:for="{{filters}}"
+        wx:key="value"
+        data-filter="{{item.value}}"
+        bindtap="onFilterTap"
+      >{{item.label}}</text>
+    </view>
+  </view>
+
+  <view class="news-timeline">
+    <view
+      class="news-item {{item.category}}"
+      wx:for="{{filteredNews}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+    >
+      <view class="news-item-time">
+        <text class="news-time">{{item.time}}</text>
+        <text class="news-tag {{item.category}}">{{item.categoryText}}</text>
+      </view>
+      <view class="news-item-content">
+        <text class="news-title">{{item.title}}</text>
+        <text class="news-text">{{item.content}}</text>
+        <view class="news-meta">
+          <text class="news-source">{{item.source}}</text>
+          <text class="news-hot" wx:if="{{item.isHot}}">🔥 热</text>
+          <text class="news-stock" wx:if="{{item.stockChange}}">{{item.stockChange}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="news-flash-footer">
+    <view class="news-view-more" bindtap="onViewMore">
+      查看更多快讯
+      <text class="news-arrow">→</text>
+    </view>
+  </view>
+</view>

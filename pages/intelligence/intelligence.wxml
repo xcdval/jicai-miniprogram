@@ -1,0 +1,52 @@
+<view class="container">
+  <view style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-bar" style="height: {{navBarHeight}}px;">
+    <view class="nav-title">市场情报</view>
+  </view>
+
+  <view class="phase-tabs">
+    <view class="phase-tab {{activePhase === 'morning' ? 'active' : ''}}" data-phase="morning" bindtap="switchPhase">
+      <text class="phase-icon">🌅</text>
+      <text>早盘</text>
+    </view>
+    <view class="phase-tab {{activePhase === 'intraday' ? 'active' : ''}}" data-phase="intraday" bindtap="switchPhase">
+      <text class="phase-icon">📊</text>
+      <text>盘中</text>
+    </view>
+    <view class="phase-tab {{activePhase === 'closing' ? 'active' : ''}}" data-phase="closing" bindtap="switchPhase">
+      <text class="phase-icon">📉</text>
+      <text>盘后</text>
+    </view>
+  </view>
+
+  <view class="ai-dashboard">
+    <view class="ai-header">
+      <text class="ai-title">🤖 AI决策面板</text>
+      <text class="ai-confidence">置信度 {{aiData.confidence}}%</text>
+    </view>
+
+    <view class="ai-signal">
+      <view class="signal-badge {{aiData.marketDirection}}">{{aiData.operation}}</view>
+    </view>
+
+    <view class="ai-signals-grid">
+      <view class="signal-item" wx:for="{{aiData.signals}}" wx:key="label">
+        <text class="signal-label">{{item.label}}</text>
+        <text class="signal-value {{item.type}}">{{item.value}}</text>
+      </view>
+    </view>
+
+    <view class="ai-summary">{{aiData.summary}}</view>
+
+    <view class="ai-checklist">
+      <view class="checklist-title">重点关注</view>
+      <view class="checklist-item" wx:for="{{aiData.checklist}}" wx:key="text">
+        <text class="checklist-checkbox {{item.checked ? 'checked' : ''}}">{{item.checked ? '☑' : '☐'}}</text>
+        <text class="checklist-text">{{item.text}}</text>
+      </view>
+    </view>
+  </view>
+
+  <news-flash newsList="{{newsFlash}}"></news-flash>
+</view>
+<tab-bar activeIndex="2"></tab-bar>

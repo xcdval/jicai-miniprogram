@@ -1,0 +1,60 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/assets/assets",
+    "pages/intelligence/intelligence",
+    "pages/analysis/analysis",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#f8fafc",
+    "navigationBarTitleText": "集财",
+    "navigationBarTextStyle": "black",
+    "navigationStyle": "custom"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#94a3b8",
+    "selectedColor": "#2563eb",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "images/tab-home.png",
+        "selectedIconPath": "images/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/assets/assets",
+        "text": "资产",
+        "iconPath": "images/tab-assets.png",
+        "selectedIconPath": "images/tab-assets-active.png"
+      },
+      {
+        "pagePath": "pages/intelligence/intelligence",
+        "text": "情报",
+        "iconPath": "images/tab-intel.png",
+        "selectedIconPath": "images/tab-intel-active.png"
+      },
+      {
+        "pagePath": "pages/analysis/analysis",
+        "text": "分析",
+        "iconPath": "images/tab-analysis.png",
+        "selectedIconPath": "images/tab-analysis-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/tab-profile.png",
+        "selectedIconPath": "images/tab-profile-active.png"
+      }
+    ]
+  },
+  "usingComponents": {
+    "nav-bar": "components/nav-bar/nav-bar",
+    "tab-bar": "components/tab-bar/tab-bar"
+  },
+  "sitemapLocation": "sitemap.json"
+}

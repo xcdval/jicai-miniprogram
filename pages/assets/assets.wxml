@@ -1,0 +1,46 @@
+<view class="container">
+  <view style="height: {{statusBarHeight}}px;"></view>
+  <view class="nav-bar" style="height: {{navBarHeight}}px;">
+    <view class="nav-title">资产</view>
+    <view class="nav-actions">
+      <view class="nav-btn" bindtap="showAddOptions">➕</view>
+    </view>
+  </view>
+
+  <view class="asset-group-tabs">
+    <view class="group-tab {{activeGroup === item.id ? 'active' : ''}}" wx:for="{{groups}}" wx:key="id" data-id="{{item.id}}" bindtap="switchGroup">{{item.name}}</view>
+  </view>
+
+  <view class="asset-total-card">
+    <view class="asset-total-header">
+      <text class="asset-total-label">总资产</text>
+      <view class="eye-icon" bindtap="toggleAmount">{{showAmount ? '👁️' : '🙈'}}</view>
+    </view>
+    <view class="asset-total-amount">{{showAmount ? totalAmount : '¥ ****'}}</view>
+    <view class="asset-total-stats">
+      <view class="stat-item">
+        <text class="stat-label">总收益</text>
+        <text class="stat-value {{totalProfit >= 0 ? 'rise' : 'fall'}}">{{showAmount ? totalProfitText : '****'}}</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-label">今日盈亏</text>
+        <text class="stat-value {{todayProfit >= 0 ? 'rise' : 'fall'}}">{{showAmount ? todayProfitText : '****'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="asset-category-list">
+    <view class="asset-category-item" wx:for="{{categoryList}}" wx:key="type" bindtap="gotoCategory">
+      <view class="category-icon {{item.type}}">{{item.icon}}</view>
+      <view class="category-info">
+        <text class="category-name">{{item.name}}</text>
+        <text class="category-count">{{item.count}}只持仓</text>
+      </view>
+      <view class="category-value">
+        <text class="category-amount">{{showAmount ? item.amount : '****'}}</text>
+        <text class="category-change {{item.change >= 0 ? 'rise' : 'fall'}}">{{item.change >= 0 ? '+' : ''}}{{item.change}}%</text>
+      </view>
+    </view>
+  </view>
+</view>
+<tab-bar activeIndex="1"></tab-bar>
