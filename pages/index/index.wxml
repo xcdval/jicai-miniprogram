@@ -4,7 +4,7 @@
 
   <!-- 导航栏 -->
   <view class="nav-bar" style="height: {{navBarHeight}}px;">
-    <view class="nav-title">集财</view>
+    <view class="nav-title">全资产管理工具</view>
     <view class="nav-actions">
       <view class="nav-btn" bindtap="onNotificationTap">🔔</view>
       <view class="nav-btn" bindtap="onSettingsTap">⚙️</view>

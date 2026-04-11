@@ -3,7 +3,7 @@ const assetService = require('../../services/assetService');
 Page({
   data: {
     statusBarHeight: 44, navBarHeight: 44,
-    userInfo: { name: '集财用户', id: '888888' },
+    userInfo: { name: '用户', id: '888888' },
     showAmount: true, darkMode: false
   },
   onLoad() {

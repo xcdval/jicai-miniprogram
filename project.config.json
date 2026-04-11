@@ -47,7 +47,7 @@
     }
   },
   "compileType": "miniprogram",
-  "libVersion": "2.32.0",
+  "libVersion": "2.31.0",
   "appid": "wx6a6d945f057e510c",
   "projectname": "jicai-miniprogram",
   "condition": {},

@@ -49,11 +49,11 @@
     </view>
     <view class="menu-item" bindtap="showToast">
       <text class="menu-icon">ℹ️</text>
-      <text class="menu-text">关于集财</text>
+      <text class="menu-text">关于</text>
       <text class="menu-arrow">›</text>
     </view>
   </view>
 
-  <view class="version">集财 v1.0.0</view>
+  <view class="version">v1.0.0</view>
 </view>
 <tab-bar activeIndex="4"></tab-bar>

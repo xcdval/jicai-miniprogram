@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "集财",
+  "navigationBarTitleText": "首页",
   "navigationStyle": "custom",
   "usingComponents": {
     "news-flash": "/components/news-flash/news-flash",
