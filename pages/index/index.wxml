@@ -1,90 +1,109 @@
 <view class="container">
-  <!-- 状态栏占位 -->
-  <view style="height: {{statusBarHeight}}px;"></view>
+  <!-- 状态栏 -->
+  <view class="status-bar" style="height: {{statusBarHeight}}px;">
+    <text class="status-time">9:41</text>
+    <text class="status-dots">●●●</text>
+  </view>
 
   <!-- 导航栏 -->
   <view class="nav-bar" style="height: {{navBarHeight}}px;">
+    <view class="nav-btn" style="visibility: hidden;">‹</view>
     <view class="nav-title">全资产管理工具</view>
-    <view class="nav-actions">
-      <view class="nav-btn" bindtap="onNotificationTap">🔔</view>
-      <view class="nav-btn" bindtap="onSettingsTap">⚙️</view>
-    </view>
+    <view class="nav-btn" bindtap="toggleTheme">◐</view>
   </view>
 
-  <!-- 资产总览卡片 -->
-  <view class="asset-overview-card">
-    <view class="overview-header">
-      <view class="overview-label">总资产</view>
+  <!-- 总资产卡片 - 紧凑版 -->
+  <view class="total-asset-card">
+    <view class="total-asset-header">
+      <text class="total-asset-label">总资产（元）</text>
       <view class="eye-icon" bindtap="toggleAmountVisibility">{{showAmount ? '👁️' : '🙈'}}</view>
     </view>
-
-    <view class="overview-amount">{{displayAmount}}</view>
-
-    <view class="overview-stats">
-      <view class="stat-item">
-        <view class="stat-label">今日盈亏</view>
-        <view class="stat-value {{todayProfit >= 0 ? 'rise' : 'fall'}}">{{todayProfitText}}</view>
-      </view>
-      <view class="stat-item">
-        <view class="stat-label">总收益</view>
-        <view class="stat-value {{totalProfit >= 0 ? 'rise' : 'fall'}}">{{totalProfitText}}</view>
-      </view>
-    </view>
-
-    <!-- 市场行情滚动 -->
-    <view class="market-ticker">
-      <view class="ticker-wrapper">
-        <view
-          class="ticker-item {{item.changePercent >= 0 ? 'rise' : 'fall'}}"
-          wx:for="{{marketIndices}}"
-          wx:key="code"
-        >
-          <text class="ticker-name">{{item.name}}</text>
-          <text class="ticker-change">{{item.changePercent > 0 ? '+' : ''}}{{item.changePercent}}%</text>
-        </view>
+    <view class="total-asset-main">
+      <view class="total-asset-amount">{{showAmount ? '¥ 386,542.00' : '¥ ****'}}</view>
+      <view class="total-asset-change">
+        <view class="change-amount rise">+ ¥ 2,348.00</view>
+        <view class="change-percent rise">今日 +0.61%</view>
       </view>
     </view>
   </view>
 
-  <!-- 资产配置概览 -->
+  <!-- 市场行情 - 横向滚动卡片 -->
+  <view class="market-card">
+    <view class="card-header-row">
+      <text class="card-title-text">市场行情</text>
+      <text class="card-update-time">更新时间: 今日</text>
+    </view>
+    <scroll-view class="market-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="market-items">
+        <view class="market-item {{item.changePercent >= 0 ? 'rise' : 'fall'}}" wx:for="{{marketIndices}}" wx:key="code">
+          <view class="market-item-name">{{item.name}}</view>
+          <view class="market-item-code">{{item.code}}</view>
+          <view class="market-item-price">{{item.price}}</view>
+          <view class="market-item-change">{{item.changePercent > 0 ? '+' : ''}}{{item.changePercent}}%</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 两列布局：资产配置 + 收益走势 -->
+  <view class="grid-2-col">
+    <!-- 资产配置 -->
+    <view class="mini-card">
+      <view class="mini-card-title">资产配置</view>
+      <view class="pie-chart">
+        <view class="pie-circle" style="background: conic-gradient(#10b981 0% 40%, #3b82f6 40% 70%, #f59e0b 70% 85%, #9ca3af 85% 100%);">
+          <view class="pie-inner"></view>
+        </view>
+      </view>
+      <view class="pie-legend">
+        <text>基金 40% 股票 30%</text>
+      </view>
+    </view>
+
+    <!-- 收益走势 -->
+    <view class="mini-card">
+      <view class="mini-card-title">收益走势</view>
+      <view class="trend-chart">
+        <text class="trend-text">📈 7日 +4.8%</text>
+      </view>
+      <view class="trend-summary">
+        <text>累计收益: ¥ 18,560</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 资产分类列表 -->
   <view class="section-header">
-    <text class="section-title">资产配置</text>
-    <text class="section-more" bindtap="gotoAssets">查看详情 →</text>
+    <text class="section-title">资产分类</text>
   </view>
 
-  <view class="allocation-list">
-    <view
-      class="allocation-card {{item.type}}"
-      wx:for="{{allocationData}}"
-      wx:key="type"
-      bindtap="gotoAssets"
-    >
-      <view class="allocation-main">
-        <view class="allocation-icon-wrap">
-          <view class="allocation-icon">{{item.icon}}</view>
-        </view>
-        <view class="allocation-info">
-          <text class="allocation-name">{{item.name}}</text>
-          <text class="allocation-count">{{item.count}}只持仓</text>
-        </view>
+  <view class="category-list">
+    <view class="category-item" wx:for="{{allocationData}}" wx:key="type" bindtap="gotoAssets">
+      <view class="category-icon-wrap {{item.type}}">
+        <text class="category-icon-text">{{item.icon}}</text>
       </view>
-      <view class="allocation-data">
-        <text class="allocation-amount">{{item.value}}</text>
-        <text class="allocation-change {{item.change >= 0 ? 'rise' : 'fall'}}">{{item.change >= 0 ? '+' : ''}}{{item.change}}%</text>
+      <view class="category-info">
+        <text class="category-name">{{item.name}}</text>
+        <text class="category-count">{{item.count}}只持仓</text>
+      </view>
+      <view class="category-value">
+        <text class="category-amount">{{showAmount ? item.value : '****'}}</text>
+        <text class="category-change {{item.change >= 0 ? 'rise' : 'fall'}}">{{item.change >= 0 ? '+' : ''}}{{item.change}}%</text>
       </view>
     </view>
   </view>
 
   <!-- 市场快讯 -->
-  <view class="section-header">
-    <text class="section-title">市场快讯</text>
-    <text class="section-more" bindtap="gotoIntelligence">更多 →</text>
-  </view>
+  <view class="news-section">
+    <view class="section-header">
+      <text class="section-title">市场快讯</text>
+      <text class="section-more" bindtap="gotoIntelligence">更多 →</text>
+    </view>
 
-  <news-flash
-    newsList="{{newsFlash}}"
-    bind:viewMore="gotoIntelligence"
-  ></news-flash>
+    <view class="news-card">
+      <news-flash newsList="{{newsFlash}}" bind:viewMore="gotoIntelligence"></news-flash>
+    </view>
+  </view>
 </view>
 
 <!-- 底部导航栏 -->

@@ -17,7 +17,13 @@ Page({
     totalProfitPercent: 3.51,
 
     // 市场行情
-    marketIndices: [],
+    marketIndices: [
+      { name: '上证指数', code: '000001.SH', price: '3,245.68', changePercent: 0.54 },
+      { name: '恒生指数', code: 'HSI.HK', price: '16,832.45', changePercent: 1.23 },
+      { name: '恒生科技', code: 'HSTECH.HK', price: '3,456.78', changePercent: -0.32 },
+      { name: '标普500', code: 'SPX.US', price: '5,234.12', changePercent: 0.78 },
+      { name: '纳斯达克', code: 'NDAQ.US', price: '16,345.67', changePercent: 1.05 }
+    ],
 
     // 资产配置
     allocationData: [
