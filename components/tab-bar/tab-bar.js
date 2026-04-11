@@ -9,11 +9,11 @@ Component({
   data: {
     safeAreaBottom: 0,
     list: [
-      { text: '首页', icon: '🏠', activeIcon: '🏠', pagePath: '/pages/index/index' },
-      { text: '资产', icon: '💰', activeIcon: '💰', pagePath: '/pages/assets/assets' },
-      { text: '情报', icon: '📰', activeIcon: '📰', pagePath: '/pages/intelligence/intelligence' },
-      { text: '分析', icon: '📊', activeIcon: '📊', pagePath: '/pages/analysis/analysis' },
-      { text: '我的', icon: '👤', activeIcon: '👤', pagePath: '/pages/profile/profile' }
+      { text: '首页', icon: '⌂', activeIcon: '⌂', pagePath: '/pages/index/index' },
+      { text: '资产', icon: '≡', activeIcon: '≡', pagePath: '/pages/assets/assets' },
+      { text: '情报', icon: '◈', activeIcon: '◈', pagePath: '/pages/intelligence/intelligence' },
+      { text: '分析', icon: '▤', activeIcon: '▤', pagePath: '/pages/analysis/analysis' },
+      { text: '我的', icon: '○', activeIcon: '●', pagePath: '/pages/profile/profile' }
     ]
   },
 
