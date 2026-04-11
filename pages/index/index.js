@@ -21,9 +21,9 @@ Page({
 
     // 资产配置
     allocationData: [
-      { type: 'fund', name: '基金', icon: '📊', value: '¥ 154,617', percent: 42 },
-      { type: 'stock', name: '股票', icon: '📈', value: '¥ 115,962', percent: 31 },
-      { type: 'deposit', name: '存款', icon: '💵', value: '¥ 100,000', percent: 27 }
+      { type: 'fund', name: '基金', icon: '📊', value: '¥ 154,617', percent: 42, count: 3, change: 2.3 },
+      { type: 'stock', name: '股票', icon: '📈', value: '¥ 115,962', percent: 31, count: 5, change: 1.8 },
+      { type: 'deposit', name: '存款', icon: '💵', value: '¥ 100,000', percent: 27, count: 1, change: 0 }
     ],
 
     // 快讯数据
@@ -85,27 +85,46 @@ Page({
   updateAllocationDisplay(categoryStats) {
     const total = Object.values(categoryStats).reduce((sum, cat) => sum + cat.value, 0);
 
+    // 模拟涨跌数据
+    const changes = {
+      FUND: 2.3,
+      STOCK: 1.8,
+      DEPOSIT: 0
+    };
+
+    const counts = {
+      FUND: 3,
+      STOCK: 5,
+      DEPOSIT: 1
+    };
+
     const allocationData = [
       {
         type: 'fund',
         name: '基金',
         icon: '📊',
         value: format.formatAmount(categoryStats.FUND?.value || 0),
-        percent: total > 0 ? Math.round((categoryStats.FUND?.value || 0) / total * 100) : 0
+        percent: total > 0 ? Math.round((categoryStats.FUND?.value || 0) / total * 100) : 0,
+        count: counts.FUND,
+        change: changes.FUND
       },
       {
         type: 'stock',
         name: '股票',
         icon: '📈',
         value: format.formatAmount(categoryStats.STOCK?.value || 0),
-        percent: total > 0 ? Math.round((categoryStats.STOCK?.value || 0) / total * 100) : 0
+        percent: total > 0 ? Math.round((categoryStats.STOCK?.value || 0) / total * 100) : 0,
+        count: counts.STOCK,
+        change: changes.STOCK
       },
       {
         type: 'deposit',
         name: '存款',
         icon: '💵',
         value: format.formatAmount(categoryStats.DEPOSIT?.value || 0),
-        percent: total > 0 ? Math.round((categoryStats.DEPOSIT?.value || 0) / total * 100) : 0
+        percent: total > 0 ? Math.round((categoryStats.DEPOSIT?.value || 0) / total * 100) : 0,
+        count: counts.DEPOSIT,
+        change: changes.DEPOSIT
       }
     ];
 

@@ -47,62 +47,44 @@
   </view>
 
   <!-- 资产配置概览 -->
-  <view class="card">
-    <view class="card-header">
-      <text class="card-title">资产配置</text>
-      <text class="card-more" bindtap="gotoAssets">查看详情 →</text>
-    </view>
-    <view class="card-body">
-      <view class="allocation-grid">
-        <view
-          class="allocation-item {{item.type}}"
-          wx:for="{{allocationData}}"
-          wx:key="type"
-          bindtap="gotoAssets"
-        >
+  <view class="section-header">
+    <text class="section-title">资产配置</text>
+    <text class="section-more" bindtap="gotoAssets">查看详情 →</text>
+  </view>
+
+  <view class="allocation-list">
+    <view
+      class="allocation-card {{item.type}}"
+      wx:for="{{allocationData}}"
+      wx:key="type"
+      bindtap="gotoAssets"
+    >
+      <view class="allocation-main">
+        <view class="allocation-icon-wrap">
           <view class="allocation-icon">{{item.icon}}</view>
-          <view class="allocation-info">
-            <text class="allocation-name">{{item.name}}</text>
-            <text class="allocation-value">{{item.value}}</text>
-          </view>
-          <view class="allocation-percent">{{item.percent}}%</view>
         </view>
+        <view class="allocation-info">
+          <text class="allocation-name">{{item.name}}</text>
+          <text class="allocation-count">{{item.count}}只持仓</text>
+        </view>
+      </view>
+      <view class="allocation-data">
+        <text class="allocation-amount">{{item.value}}</text>
+        <text class="allocation-change {{item.change >= 0 ? 'rise' : 'fall'}}">{{item.change >= 0 ? '+' : ''}}{{item.change}}%</text>
       </view>
     </view>
   </view>
 
   <!-- 市场快讯 -->
+  <view class="section-header">
+    <text class="section-title">市场快讯</text>
+    <text class="section-more" bindtap="gotoIntelligence">更多 →</text>
+  </view>
+
   <news-flash
     newsList="{{newsFlash}}"
     bind:viewMore="gotoIntelligence"
   ></news-flash>
-
-  <!-- 快捷功能 -->
-  <view class="card">
-    <view class="card-header">
-      <text class="card-title">快捷功能</text>
-    </view>
-    <view class="card-body">
-      <view class="quick-grid">
-        <view class="quick-item" bindtap="gotoAssets">
-          <view class="quick-icon fund">💰</view>
-          <text class="quick-label">资产</text>
-        </view>
-        <view class="quick-item" bindtap="gotoIntelligence">
-          <view class="quick-icon intel">📰</view>
-          <text class="quick-label">情报</text>
-        </view>
-        <view class="quick-item" bindtap="gotoAnalysis">
-          <view class="quick-icon analysis">📊</view>
-          <text class="quick-label">分析</text>
-        </view>
-        <view class="quick-item" bindtap="addAsset">
-          <view class="quick-icon add">➕</view>
-          <text class="quick-label">添加</text>
-        </view>
-      </view>
-    </view>
-  </view>
 </view>
 
 <!-- 底部导航栏 -->
