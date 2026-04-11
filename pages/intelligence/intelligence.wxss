@@ -77,8 +77,9 @@
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  padding: 20rpx 16rpx;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 20rpx 12rpx;
   background: #f8fafc;
   border-radius: 16rpx;
   border: 2rpx solid transparent;
@@ -91,35 +92,36 @@
 }
 
 .tab-icon-small {
-  font-size: 40rpx;
+  font-size: 32rpx;
   flex-shrink: 0;
 }
 
 .tab-content {
   display: flex;
-  flex-direction: column;
-  gap: 4rpx;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8rpx;
 }
 
 .tab-title {
-  font-size: 28rpx;
+  font-size: 26rpx;
   font-weight: 700;
   color: #1e293b;
 }
 
 .tab-time {
-  font-size: 22rpx;
+  font-size: 20rpx;
   color: #94a3b8;
 }
 
 /* AI决策仪表盘 */
 .ai-dashboard {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  background: #ffffff;
   border-radius: 28rpx;
   padding: 32rpx;
   margin: 0 32rpx 24rpx;
-  color: white;
-  box-shadow: 0 10rpx 40rpx rgba(30, 41, 59, 0.25);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06), 0 2rpx 4rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid rgba(226, 232, 240, 0.8);
 }
 
 .ai-dashboard-header {
@@ -134,12 +136,13 @@
   font-weight: 600;
   padding: 8rpx 20rpx;
   background: linear-gradient(135deg, #2563eb, #10b981);
+  color: white;
   border-radius: 9999rpx;
 }
 
 .ai-update-time {
   font-size: 22rpx;
-  opacity: 0.7;
+  color: #94a3b8;
 }
 
 .ai-conclusion {
@@ -147,9 +150,10 @@
   line-height: 1.6;
   margin-bottom: 28rpx;
   padding: 20rpx;
-  background: rgba(255, 255, 255, 0.08);
+  background: #f8fafc;
   border-radius: 16rpx;
   border-left: 4rpx solid #10b981;
+  color: #1e293b;
 }
 
 .ai-signals {
@@ -164,32 +168,33 @@
   flex-direction: column;
   gap: 8rpx;
   padding: 20rpx;
-  background: rgba(255, 255, 255, 0.08);
+  background: #f8fafc;
   border-radius: 16rpx;
   text-align: center;
 }
 
 .signal-label {
   font-size: 22rpx;
-  opacity: 0.7;
+  color: #64748b;
 }
 
 .signal-value {
   font-size: 28rpx;
   font-weight: 700;
+  color: #1e293b;
 }
 
 .signal-value.signal-buy {
-  color: #86efac;
+  color: #ef4444;
 }
 
 .signal-value.signal-hold {
-  color: #fcd34d;
+  color: #f59e0b;
 }
 
 /* 操作checklist */
 .ai-checklist {
-  border-top: 1rpx solid rgba(255, 255, 255, 0.1);
+  border-top: 1rpx solid #f1f5f9;
   padding-top: 24rpx;
 }
 
@@ -197,12 +202,13 @@
   font-size: 26rpx;
   font-weight: 600;
   margin-bottom: 16rpx;
+  color: #1e293b;
 }
 
 .checklist-item {
   font-size: 24rpx;
   line-height: 1.8;
-  opacity: 0.85;
+  color: #64748b;
   padding-left: 32rpx;
   position: relative;
 }
