@@ -18,16 +18,7 @@ Page({
     overlapTip: '基金持仓重叠较少，配置合理',
     // 图表数据
     assetAllocationData: [],
-    profitTrendData: [],
     industryData: [],
-    // 时间段选择
-    timeRange: '7d',
-    timeRanges: [
-      { key: '7d', name: '近7日' },
-      { key: '30d', name: '近30日' },
-      { key: '90d', name: '近3月' },
-      { key: '1y', name: '近1年' }
-    ],
     // 统计概览
     stats: {
       totalReturn: 12580,
@@ -63,9 +54,6 @@ Page({
       healthColor: color,
       industryData: data.industryData || []
     });
-
-    // 生成模拟收益走势数据
-    this.generateProfitTrendData();
   },
 
   refreshData() {
@@ -77,13 +65,18 @@ Page({
     const totalValue = (categoryStats.FUND?.value || 0) + (categoryStats.STOCK?.value || 0) + (categoryStats.DEPOSIT?.value || 0);
 
     const assetAllocationData = [
-      { name: '基金', value: categoryStats.FUND?.value || 0, color: '#3b82f6', valueText: ((categoryStats.FUND?.value || 0) / 10000).toFixed(2) + '万', percent: totalValue > 0 ? ((categoryStats.FUND?.value || 0) / totalValue * 100).toFixed(1) : 0 },
-      { name: '股票', value: categoryStats.STOCK?.value || 0, color: '#10b981', valueText: ((categoryStats.STOCK?.value || 0) / 10000).toFixed(2) + '万', percent: totalValue > 0 ? ((categoryStats.STOCK?.value || 0) / totalValue * 100).toFixed(1) : 0 },
-      { name: '存款', value: categoryStats.DEPOSIT?.value || 0, color: '#f59e0b', valueText: ((categoryStats.DEPOSIT?.value || 0) / 10000).toFixed(2) + '万', percent: totalValue > 0 ? ((categoryStats.DEPOSIT?.value || 0) / totalValue * 100).toFixed(1) : 0 }
+      { name: '基金', value: categoryStats.FUND?.value || 0, color: '#10b981', valueText: ((categoryStats.FUND?.value || 0) / 10000).toFixed(2) + '万', percent: totalValue > 0 ? Math.round((categoryStats.FUND?.value || 0) / totalValue * 100) : 0 },
+      { name: '股票', value: categoryStats.STOCK?.value || 0, color: '#3b82f6', valueText: ((categoryStats.STOCK?.value || 0) / 10000).toFixed(2) + '万', percent: totalValue > 0 ? Math.round((categoryStats.STOCK?.value || 0) / totalValue * 100) : 0 },
+      { name: '存款', value: categoryStats.DEPOSIT?.value || 0, color: '#f59e0b', valueText: ((categoryStats.DEPOSIT?.value || 0) / 10000).toFixed(2) + '万', percent: totalValue > 0 ? Math.round((categoryStats.DEPOSIT?.value || 0) / totalValue * 100) : 0 }
     ].filter(item => item.value > 0);
+
+    // 生成conic-gradient
+    const conicGradient = this.generateConicGradient(assetAllocationData);
 
     this.setData({
       assetAllocationData: assetAllocationData,
+      conicGradient: conicGradient,
+      totalAssetText: totalValue > 0 ? (totalValue / 10000).toFixed(2) + '万' : '0',
       stats: {
         totalReturn: stats.totalProfit,
         totalReturnText: this.formatNumber(stats.totalProfit),
@@ -97,45 +90,6 @@ Page({
     wx.showToast({ title: '刷新成功', icon: 'success' });
   },
 
-  // 生成收益走势数据
-  generateProfitTrendData() {
-    const ranges = {
-      '7d': 7,
-      '30d': 30,
-      '90d': 90,
-      '1y': 365
-    };
-
-    const days = ranges[this.data.timeRange] || 7;
-    const data = [];
-    let value = 0;
-
-    for (let i = days; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-
-      // 模拟波动数据
-      const change = (Math.random() - 0.45) * 1000;
-      value += change;
-
-      data.push({
-        label: `${date.getMonth() + 1}/${date.getDate()}`,
-        value: Math.round(value),
-        date: format.formatDate(date, 'MM-DD')
-      });
-    }
-
-    this.setData({ profitTrendData: data });
-  },
-
-  // 切换时间范围
-  switchTimeRange(e) {
-    const range = e.currentTarget.dataset.range;
-    this.setData({ timeRange: range }, () => {
-      this.generateProfitTrendData();
-    });
-  },
-
   viewDetailReport() {
     wx.showToast({ title: '详细报告开发中', icon: 'none' });
   },
@@ -143,6 +97,32 @@ Page({
   // 跳转到资产页面
   gotoAssets() {
     wx.switchTab({ url: '/pages/assets/assets' });
+  },
+
+  // 切换到收益分析
+  switchTab() {
+    wx.navigateTo({
+      url: '/pages/profit-analysis/profit-analysis'
+    });
+  },
+
+  // 生成conic-gradient样式
+  generateConicGradient(data) {
+    if (!data || data.length === 0) return '';
+
+    let gradient = '';
+    let currentPercent = 0;
+
+    data.forEach((item, index) => {
+      const percent = item.percent || 0;
+      if (percent > 0) {
+        if (gradient) gradient += ', ';
+        gradient += `${item.color} ${currentPercent}% ${currentPercent + percent}%`;
+        currentPercent += percent;
+      }
+    });
+
+    return gradient;
   },
 
   // 格式化数字

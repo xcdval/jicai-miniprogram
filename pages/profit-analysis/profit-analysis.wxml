@@ -1,0 +1,163 @@
+<view class="container">
+  <!-- 状态栏 -->
+  <view class="status-bar" style="height: {{statusBarHeight}}px;">
+    <text class="status-time">9:41</text>
+    <text class="status-dots">●●●</text>
+  </view>
+
+  <!-- 导航栏 -->
+  <view class="nav-bar" style="height: {{navBarHeight}}px;">
+    <view class="nav-btn" bindtap="switchTab" data-tab="holding">持仓分析</view>
+    <view class="nav-title">收益分析</view>
+    <view class="nav-btn" bindtap="refreshData">↻</view>
+  </view>
+
+  <!-- 统计概览卡片 -->
+  <view class="stats-overview-card">
+    <view class="stats-grid">
+      <view class="stats-item {{stats.totalReturn >= 0 ? 'positive' : 'negative'}}">
+        <view class="stats-value-large">
+          <text class="stats-sign">{{stats.totalReturn >= 0 ? '+' : ''}}</text>
+          <text class="stats-number">{{stats.totalReturnText}}</text>
+        </view>
+        <view class="stats-label">累计收益</view>
+      </view>
+      <view class="stats-divider"></view>
+      <view class="stats-item {{stats.totalReturnPercent >= 0 ? 'positive' : 'negative'}}">
+        <view class="stats-value-large">
+          <text class="stats-sign">{{stats.totalReturnPercent >= 0 ? '+' : ''}}</text>
+          <text class="stats-number">{{stats.totalReturnPercent.toFixed(2)}}</text>
+          <text class="stats-unit">%</text>
+        </view>
+        <view class="stats-label">收益率</view>
+      </view>
+      <view class="stats-divider"></view>
+      <view class="stats-item negative">
+        <view class="stats-value-large">
+          <text class="stats-number">{{stats.maxDrawdown}}</text>
+          <text class="stats-unit">%</text>
+        </view>
+        <view class="stats-label">最大回撤</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 时间范围切换 -->
+  <view class="time-range-section">
+    <view class="time-range-tabs">
+      <view class="range-tab {{timeRange === item.key ? 'active' : ''}}"
+            wx:for="{{timeRanges}}"
+            wx:key="key"
+            data-range="{{item.key}}"
+            bindtap="switchTimeRange">
+        {{item.name}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 收益走势图表 -->
+  <view class="chart-card">
+    <view class="chart-header">
+      <text class="chart-title">收益走势图</text>
+      <text class="chart-subtitle">{{currentRangeName}}</text>
+    </view>
+    <view class="chart-container">
+      <profit-line data="{{profitTrendData}}" type="profit"></profit-line>
+    </view>
+    <view class="chart-legend">
+      <view class="legend-item">
+        <view class="legend-dot" style="background: #2563eb;"></view>
+        <text class="legend-text">累计收益</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 收益明细卡片 -->
+  <view class="section-title">收益明细</view>
+  <view class="profit-detail-card">
+    <view class="detail-item">
+      <view class="detail-icon" style="background: rgba(37, 99, 235, 0.1);">📈</view>
+      <view class="detail-info">
+        <text class="detail-name">今日收益</text>
+        <text class="detail-date">{{todayDate}}</text>
+      </view>
+      <view class="detail-value {{todayProfit >= 0 ? 'positive' : 'negative'}}">
+        {{todayProfit >= 0 ? '+' : ''}}{{todayProfitText}}
+      </view>
+    </view>
+    <view class="detail-item">
+      <view class="detail-icon" style="background: rgba(16, 185, 129, 0.1);">📊</view>
+      <view class="detail-info">
+        <text class="detail-name">本周收益</text>
+        <text class="detail-date">{{weekDateRange}}</text>
+      </view>
+      <view class="detail-value {{weekProfit >= 0 ? 'positive' : 'negative'}}">
+        {{weekProfit >= 0 ? '+' : ''}}{{weekProfitText}}
+      </view>
+    </view>
+    <view class="detail-item">
+      <view class="detail-icon" style="background: rgba(245, 158, 11, 0.1);">📅</view>
+      <view class="detail-info">
+        <text class="detail-name">本月收益</text>
+        <text class="detail-date">{{monthDateRange}}</text>
+      </view>
+      <view class="detail-value {{monthProfit >= 0 ? 'positive' : 'negative'}}">
+        {{monthProfit >= 0 ? '+' : ''}}{{monthProfitText}}
+      </view>
+    </view>
+    <view class="detail-item">
+      <view class="detail-icon" style="background: rgba(139, 92, 246, 0.1);">🏆</view>
+      <view class="detail-info">
+        <text class="detail-name">本年收益</text>
+        <text class="detail-date">{{yearDateRange}}</text>
+      </view>
+      <view class="detail-value {{yearProfit >= 0 ? 'positive' : 'negative'}}">
+        {{yearProfit >= 0 ? '+' : ''}}{{yearProfitText}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 收益分析 -->
+  <view class="section-title">收益分析</view>
+  <view class="analysis-card">
+    <view class="analysis-item">
+      <view class="analysis-header">
+        <text class="analysis-name">夏普比率</text>
+        <text class="analysis-value">{{stats.sharpeRatio}}</text>
+      </view>
+      <view class="analysis-desc">衡量风险调整后的收益表现，越高越好</view>
+      <view class="analysis-bar">
+        <view class="analysis-progress" style="width: {{sharpePercent}}%; background: linear-gradient(90deg, #2563eb, #10b981);"></view>
+      </view>
+    </view>
+    <view class="analysis-item">
+      <view class="analysis-header">
+        <text class="analysis-name">波动率</text>
+        <text class="analysis-value">{{stats.volatility}}%</text>
+      </view>
+      <view class="analysis-desc">反映资产价格波动程度，越低越稳定</view>
+      <view class="analysis-bar">
+        <view class="analysis-progress" style="width: {{volatilityPercent}}%; background: linear-gradient(90deg, #f59e0b, #ef4444);"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 资产收益排行 -->
+  <view class="section-title">资产收益排行</view>
+  <view class="rank-card">
+    <view class="rank-item" wx:for="{{profitRank}}" wx:key="name">
+      <view class="rank-number" style="background: {{index < 3 ? ['#fbbf24', '#94a3b8', '#b45309'][index] : '#e2e8f0'}}; color: {{index < 3 ? '#fff' : '#64748b'}};">{{index + 1}}</view>
+      <view class="rank-info">
+        <text class="rank-name">{{item.name}}</text>
+        <text class="rank-type">{{item.type}}</text>
+      </view>
+      <view class="rank-profit {{item.profit >= 0 ? 'positive' : 'negative'}}">
+        <text class="rank-profit-value">{{item.profit >= 0 ? '+' : ''}}{{item.profit}}%</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 查看详细报告按钮 -->
+  <view class="btn-primary" bindtap="viewDetailReport">查看详细收益报告</view>
+</view>
+<tab-bar activeIndex="3"></tab-bar>

@@ -7,7 +7,7 @@
 
   <!-- 导航栏 -->
   <view class="nav-bar" style="height: {{navBarHeight}}px;">
-    <view class="nav-btn" style="visibility: hidden;">‹</view>
+    <view class="nav-btn" bindtap="switchTab" data-tab="profit">收益分析</view>
     <view class="nav-title">持仓分析</view>
     <view class="nav-btn" bindtap="refreshData">↻</view>
   </view>
@@ -51,41 +51,28 @@
     <view class="health-desc">0-100分，分数越高越健康</view>
   </view>
 
-  <!-- 资产配置饼图 -->
+  <!-- 资产配置 - 参考首页设计 -->
   <view class="section-title">资产配置</view>
-  <view class="chart-card">
-    <view class="chart-content">
-      <asset-pie data="{{assetAllocationData}}"></asset-pie>
-      <view class="chart-legend">
-        <view class="legend-item" wx:for="{{assetAllocationData}}" wx:key="name">
-          <view class="legend-left">
-            <view class="legend-color" style="background: {{item.color}};"></view>
-            <text class="legend-name">{{item.name}}</text>
-          </view>
-          <view class="legend-right">
-            <text class="legend-percent">{{item.percent}}%</text>
-            <text class="legend-value">{{item.valueText}}</text>
+  <view class="asset-allocation-card">
+    <view class="allocation-main">
+      <!-- 左侧饼图 -->
+      <view class="allocation-pie">
+        <view class="pie-circle" style="background: conic-gradient({{conicGradient}});">
+          <view class="pie-inner">
+            <text class="pie-total">{{totalAssetText}}</text>
           </view>
         </view>
       </view>
-    </view>
-  </view>
-
-  <!-- 收益走势 -->
-  <view class="section-title">
-    <text>收益走势</text>
-    <view class="time-range-tabs">
-      <view class="range-tab {{timeRange === item.key ? 'active' : ''}}"
-            wx:for="{{timeRanges}}"
-            wx:key="key"
-            data-range="{{item.key}}"
-            bindtap="switchTimeRange">
-        {{item.name}}
+      <!-- 右侧图例 -->
+      <view class="allocation-legend">
+        <view class="legend-item" wx:for="{{assetAllocationData}}" wx:key="name">
+          <view class="legend-dot" style="background: {{item.color}};"></view>
+          <text class="legend-name">{{item.name}}</text>
+          <text class="legend-percent">{{item.percent}}%</text>
+          <text class="legend-value">{{item.valueText}}</text>
+        </view>
       </view>
     </view>
-  </view>
-  <view class="chart-card">
-    <profit-line data="{{profitTrendData}}" type="profit"></profit-line>
   </view>
 
   <!-- 持仓分析 -->

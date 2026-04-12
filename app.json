@@ -9,6 +9,7 @@
     "pages/asset-ocr/asset-ocr",
     "pages/intelligence/intelligence",
     "pages/analysis/analysis",
+    "pages/profit-analysis/profit-analysis",
     "pages/profile/profile"
   ],
   "window": {

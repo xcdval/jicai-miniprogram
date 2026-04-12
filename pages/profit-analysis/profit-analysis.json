@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "收益分析",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "tab-bar": "/components/tab-bar/tab-bar",
+    "profit-line": "/components/charts/profit-line/profit-line"
+  }
+}

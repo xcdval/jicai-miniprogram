@@ -45,29 +45,27 @@
     </scroll-view>
   </view>
 
-  <!-- 两列布局：资产配置 + 收益走势 -->
-  <view class="grid-2-col">
-    <!-- 资产配置 -->
-    <view class="mini-card">
-      <view class="mini-card-title">资产配置</view>
-      <view class="pie-chart">
-        <view class="pie-circle" style="background: conic-gradient(#10b981 0% 40%, #3b82f6 40% 70%, #f59e0b 70% 85%, #9ca3af 85% 100%);">
-          <view class="pie-inner"></view>
+  <!-- 当日收益走势 -->
+  <view class="today-trend-section">
+    <view class="section-header-row">
+      <text class="section-title">今日走势</text>
+      <text class="trend-update-time">实时更新</text>
+    </view>
+    <view class="today-trend-card">
+      <view class="trend-chart-container">
+        <view class="trend-line-chart">
+          <canvas type="2d" id="todayTrendCanvas" style="width: 100%; height: 100%;"></canvas>
         </view>
       </view>
-      <view class="pie-legend">
-        <text>基金 40% 股票 30%</text>
-      </view>
-    </view>
-
-    <!-- 收益走势 -->
-    <view class="mini-card">
-      <view class="mini-card-title">收益走势</view>
-      <view class="trend-chart">
-        <text class="trend-text">📈 7日 +4.8%</text>
-      </view>
-      <view class="trend-summary">
-        <text>累计收益: ¥ 18,560</text>
+      <view class="today-summary">
+        <view class="today-item">
+          <text class="today-label">今日收益</text>
+          <text class="today-value {{todayProfit >= 0 ? 'rise' : 'fall'}}">{{todayProfit >= 0 ? '+' : ''}}{{todayProfitText}}</text>
+        </view>
+        <view class="today-item">
+          <text class="today-label">今日收益率</text>
+          <text class="today-rate {{todayProfitPercent >= 0 ? 'rise' : 'fall'}}">{{todayProfitPercent >= 0 ? '+' : ''}}{{todayProfitPercent}}%</text>
+        </view>
       </view>
     </view>
   </view>
