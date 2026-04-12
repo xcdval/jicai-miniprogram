@@ -142,9 +142,13 @@ Page({
       itemList: ['手动录入', '截图导入(OCR)'],
       success: (res) => {
         if (res.tapIndex === 0) {
-          wx.showToast({ title: '手动录入开发中', icon: 'none' });
+          wx.navigateTo({
+            url: '/pages/asset-edit/asset-edit?type=FUND'
+          });
         } else {
-          wx.showToast({ title: 'OCR识别开发中', icon: 'none' });
+          wx.navigateTo({
+            url: '/pages/asset-ocr/asset-ocr?platform=alipay'
+          });
         }
       }
     });

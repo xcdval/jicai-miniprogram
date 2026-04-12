@@ -1,0 +1,134 @@
+<view class="container">
+  <!-- 状态栏 -->
+  <view class="status-bar" style="height: {{statusBarHeight}}px;">
+    <text class="status-time">9:41</text>
+  </view>
+
+  <!-- 导航栏 -->
+  <view class="nav-bar" style="height: {{navBarHeight}}px;">
+    <view class="nav-btn" bindtap="goBack">‹</view>
+    <view class="nav-title">截图识别</view>
+    <view class="nav-btn-placeholder"></view>
+  </view>
+
+  <!-- 上传步骤 -->
+  <view wx:if="{{step === 'upload'}}">
+    <!-- 平台选择 -->
+    <view class="section-title">选择截图来源</view>
+    <view class="platform-grid">
+      <view class="platform-item {{selectedPlatform === item.id ? 'active' : ''}}"
+            wx:for="{{supportedPlatforms}}"
+            wx:key="id"
+            data-platform="{{item.id}}"
+            bindtap="selectPlatform"
+            style="{{selectedPlatform === item.id ? 'border-color: ' + item.color : ''}}">
+        <text class="platform-icon" style="color: {{item.color}}">{{item.icon}}</text>
+        <text class="platform-name">{{item.name}}</text>
+        <view wx:if="{{selectedPlatform === item.id}}" class="platform-check" style="background: {{item.color}}">✓</view>
+      </view>
+    </view>
+
+    <!-- 上传区域 -->
+    <view class="section-title">上传截图</view>
+    <view class="upload-area {{selectedPlatform ? 'active' : ''}}" bindtap="chooseImage">
+      <view class="upload-icon">📷</view>
+      <view class="upload-text">点击选择或拍摄截图</view>
+      <view class="upload-tip">支持支付宝、天天基金等平台持仓截图</view>
+    </view>
+
+    <!-- 识别说明 -->
+    <view class="ocr-tips">
+      <view class="tip-title">识别说明</view>
+      <view class="tip-item">1. 请确保截图包含资产名称、代码、成本价、份额等信息</view>
+      <view class="tip-item">2. 截图越清晰，识别准确率越高</view>
+      <view class="tip-item">3. 识别结果仅供参考，请核对后保存</view>
+    </view>
+  </view>
+
+  <!-- 预览步骤 -->
+  <view wx:if="{{step === 'preview'}}">
+    <view class="section-title">图片预览</view>
+    <view class="preview-area">
+      <image class="preview-image" src="{{imagePath}}" mode="aspectFit" />
+    </view>
+
+    <!-- 处理进度 -->
+    <view class="progress-area" wx:if="{{isProcessing}}">
+      <view class="progress-bar">
+        <view class="progress-fill" style="width: {{progress}}%"></view>
+      </view>
+      <view class="progress-text">识别中 {{progress}}%</view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-btns" wx:if="{{!isProcessing}}">
+      <button class="btn btn-primary" bindtap="startOCR">开始识别</button>
+      <button class="btn btn-secondary" bindtap="chooseImage">重新选择</button>
+    </view>
+  </view>
+
+  <!-- 编辑步骤 -->
+  <view wx:if="{{step === 'edit'}}">
+    <view class="section-title">识别结果 ({{recognizedAssets.length}}条)</view>
+
+    <!-- 识别结果列表 -->
+    <view class="result-list">
+      <view class="result-item" wx:for="{{recognizedAssets}}" wx:key="index">
+        <view class="result-header">
+          <view class="result-type {{item.type === 'FUND' ? 'fund' : item.type === 'STOCK' ? 'stock' : 'deposit'}}">
+            {{item.type === 'FUND' ? '基金' : item.type === 'STOCK' ? '股票' : '存款'}}
+          </view>
+          <view class="result-actions">
+            <text class="action-btn" data-index="{{index}}" bindtap="editAsset">编辑</text>
+            <text class="action-btn delete" data-index="{{index}}" bindtap="deleteAsset">删除</text>
+          </view>
+        </view>
+
+        <view class="result-content">
+          <view class="result-row">
+            <text class="result-label">名称</text>
+            <text class="result-value">{{item.name}}</text>
+          </view>
+
+          <view class="result-row" wx:if="{{item.code}}">
+            <text class="result-label">代码</text>
+            <text class="result-value code">{{item.code}}</text>
+          </view>
+
+          <view class="result-row" wx:if="{{item.costPrice}}">
+            <text class="result-label">成本价</text>
+            <text class="result-value">{{item.costPrice}}</text>
+          </view>
+
+          <view class="result-row" wx:if="{{item.shares}}">
+            <text class="result-label">份额</text>
+            <text class="result-value">{{item.shares}}</text>
+          </view>
+
+          <view class="result-row" wx:if="{{item.amount}}">
+            <text class="result-label">金额</text>
+            <text class="result-value">{{item.amount}}</text>
+          </view>
+
+          <view class="result-row" wx:if="{{item.annualRate}}">
+            <text class="result-label">利率</text>
+            <text class="result-value">{{item.annualRate}}%</text>
+          </view>
+
+          <view class="result-row">
+            <text class="result-label">平台</text>
+            <text class="result-value">{{item.platform}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-btns">
+      <button class="btn btn-primary" bindtap="addAssets">添加到资产</button>
+      <button class="btn btn-secondary" bindtap="retryOCR">重新识别</button>
+    </view>
+  </view>
+
+  <view class="safe-area-bottom"></view>
+</view>

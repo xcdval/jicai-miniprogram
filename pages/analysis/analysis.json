@@ -2,6 +2,8 @@
   "navigationBarTitleText": "分析",
   "navigationStyle": "custom",
   "usingComponents": {
-    "tab-bar": "/components/tab-bar/tab-bar"
+    "tab-bar": "/components/tab-bar/tab-bar",
+    "asset-pie": "/components/charts/asset-pie/asset-pie",
+    "profit-line": "/components/charts/profit-line/profit-line"
   }
 }

@@ -77,7 +77,40 @@
     </view>
   </view>
 
-  <!-- 其他设置 -->
+  <!-- 数据管理 -->
+  <view class="section-title">数据管理</view>
+  <view class="menu-card">
+    <view class="menu-item" bindtap="exportData">
+      <view class="menu-left">
+        <view class="menu-icon">📤</view>
+        <text class="menu-text">导出数据</text>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
+    <view class="menu-item" bindtap="importData">
+      <view class="menu-left">
+        <view class="menu-icon">📥</view>
+        <text class="menu-text">导入数据</text>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
+    <view class="menu-item" bindtap="showStorageInfo">
+      <view class="menu-left">
+        <view class="menu-icon">💾</view>
+        <text class="menu-text">存储空间</text>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
+    <view class="menu-item" bindtap="clearData">
+      <view class="menu-left">
+        <view class="menu-icon">🗑️</view>
+        <text class="menu-text text-danger">清空数据</text>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
+  </view>
+
+  <!-- 偏好设置 -->
   <view class="section-title">偏好设置</view>
   <view class="menu-card">
     <view class="menu-item" bindtap="toggleAmount">

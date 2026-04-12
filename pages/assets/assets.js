@@ -19,14 +19,59 @@ Page({
     this.refreshData();
   },
   onShow() { this.refreshData(); },
-  refreshData() {
+  async refreshData() {
+    try {
+      // 刷新行情
+      await assetService.refreshAssetPrices();
+    } catch (e) {
+      console.error('刷新行情失败:', e);
+    }
+
     const stats = assetService.calculateStatistics();
     const show = assetService.getAmountVisibility();
-    this.setData({ showAmount: show, totalAmount: format.formatAmount(stats.totalValue), totalProfit: stats.totalProfit, todayProfit: stats.todayProfit });
+
+    // 更新分类统计
+    const categoryList = this.data.categoryList.map(cat => {
+      const typeKey = cat.type.toUpperCase();
+      const typeStat = stats.categoryStats[typeKey];
+      if (typeStat) {
+        return {
+          ...cat,
+          amount: format.formatAmount(typeStat.value),
+          count: typeStat.count
+        };
+      }
+      return cat;
+    });
+
+    this.setData({
+      showAmount: show,
+      totalAmount: format.formatAmount(stats.totalValue),
+      totalProfit: stats.totalProfit,
+      todayProfit: stats.todayProfit,
+      categoryList: categoryList
+    });
   },
   switchGroup(e) { this.setData({ activeGroup: e.currentTarget.dataset.id }); },
   toggleAmount() { assetService.toggleAmountVisibility(); this.refreshData(); },
-  showAddOptions() { wx.showActionSheet({ itemList: ['手动录入', '截图导入(OCR)', '导入持仓'], success: (res) => { if(res.tapIndex===0) wx.showToast({title:'功能开发中',icon:'none'}); } }); },
+  showAddOptions() {
+    wx.showActionSheet({
+      itemList: ['手动录入', '截图导入(OCR)', '导入持仓'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          wx.navigateTo({
+            url: '/pages/asset-edit/asset-edit?type=FUND'
+          });
+        } else if (res.tapIndex === 1) {
+          wx.navigateTo({
+            url: '/pages/asset-ocr/asset-ocr'
+          });
+        } else {
+          wx.showToast({ title: '功能开发中', icon: 'none' });
+        }
+      }
+    });
+  },
   gotoCategory(e) {
     const type = e.currentTarget.dataset.type;
     const pages = {

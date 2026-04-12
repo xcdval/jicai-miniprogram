@@ -71,7 +71,14 @@ Page({
   },
 
   // 刷新数据
-  refreshData() {
+  async refreshData() {
+    try {
+      // 刷新行情数据
+      await assetService.refreshAssetPrices();
+    } catch (e) {
+      console.error('刷新行情失败:', e);
+    }
+
     const stats = assetService.calculateStatistics();
     const showAmount = assetService.getAmountVisibility();
 

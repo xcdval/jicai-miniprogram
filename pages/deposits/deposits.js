@@ -29,7 +29,7 @@ Page({
   },
 
   loadDeposits() {
-    const deposits = assetService.getFundsByCategory('deposit') || this.getMockDeposits();
+    const deposits = assetService.getAssetsByType('DEPOSIT') || this.getMockDeposits();
     this.setData({
       allDeposits: deposits,
       depositList: deposits
@@ -107,7 +107,20 @@ Page({
   },
 
   addDeposit() {
-    wx.showToast({ title: '添加存款功能开发中', icon: 'none' });
+    wx.showActionSheet({
+      itemList: ['手动录入', '截图导入(OCR)'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          wx.navigateTo({
+            url: '/pages/asset-edit/asset-edit?type=DEPOSIT'
+          });
+        } else {
+          wx.navigateTo({
+            url: '/pages/asset-ocr/asset-ocr?platform=other'
+          });
+        }
+      }
+    });
   },
 
   goBack() {

@@ -1,0 +1,11 @@
+.chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10rpx;
+}
+
+.pie-canvas {
+  width: 280rpx;
+  height: 280rpx;
+}

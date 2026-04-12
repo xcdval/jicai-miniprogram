@@ -1,0 +1,3 @@
+<view class="chart-container">
+  <canvas type="2d" id="assetPieChart" class="pie-canvas"></canvas>
+</view>

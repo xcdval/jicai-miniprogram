@@ -5,6 +5,8 @@
     "pages/funds/funds",
     "pages/stocks/stocks",
     "pages/deposits/deposits",
+    "pages/asset-edit/asset-edit",
+    "pages/asset-ocr/asset-ocr",
     "pages/intelligence/intelligence",
     "pages/analysis/analysis",
     "pages/profile/profile"

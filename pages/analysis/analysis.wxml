@@ -12,13 +12,80 @@
     <view class="nav-btn" bindtap="refreshData">↻</view>
   </view>
 
+  <!-- 统计概览卡片 -->
+  <view class="stats-overview-card">
+    <view class="stats-grid">
+      <view class="stats-item {{stats.totalReturn >= 0 ? 'positive' : 'negative'}}">
+        <view class="stats-value-large">
+          <text class="stats-sign">{{stats.totalReturn >= 0 ? '+' : ''}}</text>
+          <text class="stats-number">{{stats.totalReturnText}}</text>
+        </view>
+        <view class="stats-label">累计收益</view>
+      </view>
+      <view class="stats-divider"></view>
+      <view class="stats-item {{stats.totalReturnPercent >= 0 ? 'positive' : 'negative'}}">
+        <view class="stats-value-large">
+          <text class="stats-sign">{{stats.totalReturnPercent >= 0 ? '+' : ''}}</text>
+          <text class="stats-number">{{stats.totalReturnPercent.toFixed(2)}}</text>
+          <text class="stats-unit">%</text>
+        </view>
+        <view class="stats-label">收益率</view>
+      </view>
+      <view class="stats-divider"></view>
+      <view class="stats-item negative">
+        <view class="stats-value-large">
+          <text class="stats-number">{{stats.maxDrawdown}}</text>
+          <text class="stats-unit">%</text>
+        </view>
+        <view class="stats-label">最大回撤</view>
+      </view>
+    </view>
+  </view>
+
   <!-- 持仓健康度评分 -->
   <view class="health-score-card">
-    <view class="health-circle">
-      <view class="health-score">{{healthScore}}</view>
+    <view class="health-circle" style="border-color: {{healthColor}};">
+      <view class="health-score" style="color: {{healthColor}};">{{healthScore}}</view>
     </view>
     <view class="health-label">持仓健康度评分</view>
     <view class="health-desc">0-100分，分数越高越健康</view>
+  </view>
+
+  <!-- 资产配置饼图 -->
+  <view class="section-title">资产配置</view>
+  <view class="chart-card">
+    <view class="chart-content">
+      <asset-pie data="{{assetAllocationData}}"></asset-pie>
+      <view class="chart-legend">
+        <view class="legend-item" wx:for="{{assetAllocationData}}" wx:key="name">
+          <view class="legend-left">
+            <view class="legend-color" style="background: {{item.color}};"></view>
+            <text class="legend-name">{{item.name}}</text>
+          </view>
+          <view class="legend-right">
+            <text class="legend-percent">{{item.percent}}%</text>
+            <text class="legend-value">{{item.valueText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 收益走势 -->
+  <view class="section-title">
+    <text>收益走势</text>
+    <view class="time-range-tabs">
+      <view class="range-tab {{timeRange === item.key ? 'active' : ''}}"
+            wx:for="{{timeRanges}}"
+            wx:key="key"
+            data-range="{{item.key}}"
+            bindtap="switchTimeRange">
+        {{item.name}}
+      </view>
+    </view>
+  </view>
+  <view class="chart-card">
+    <profit-line data="{{profitTrendData}}" type="profit"></profit-line>
   </view>
 
   <!-- 持仓分析 -->
@@ -47,13 +114,6 @@
     </view>
   </view>
 
-  <!-- 优化建议 -->
-  <view class="section-title">优化建议</view>
-  <view class="suggestion-card">
-    <view class="suggestion-title">降低白酒行业集中度</view>
-    <view class="suggestion-content">建议将部分白酒仓位转换到科技、医疗等行业基金，分散投资风险</view>
-  </view>
-
   <!-- 行业分布 -->
   <view class="section-title">行业分布</view>
   <view class="industry-card">
@@ -64,6 +124,13 @@
         <text class="industry-percent">{{item.value}}%</text>
       </view>
     </view>
+  </view>
+
+  <!-- 优化建议 -->
+  <view class="section-title">优化建议</view>
+  <view class="suggestion-card">
+    <view class="suggestion-title">降低白酒行业集中度</view>
+    <view class="suggestion-content">建议将部分白酒仓位转换到科技、医疗等行业基金，分散投资风险</view>
   </view>
 
   <!-- 查看详细报告按钮 -->

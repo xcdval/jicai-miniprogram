@@ -5,6 +5,7 @@
 
 const storage = require('../utils/storage');
 const format = require('../utils/format');
+const marketService = require('./marketService');
 
 /**
  * 获取所有资产分组
@@ -179,6 +180,161 @@ function getAmountVisibility() {
   return prefs.showAmount;
 }
 
+/**
+ * 按类型获取资产（基金/股票/存款）
+ */
+function getAssetsByType(type) {
+  const assets = getAssets();
+  const result = [];
+
+  assets.groups.forEach(group => {
+    group.assets.forEach(asset => {
+      if (asset.type === type.toUpperCase()) {
+        result.push({
+          ...asset,
+          groupId: group.id,
+          groupName: group.name
+        });
+      }
+    });
+  });
+
+  return result;
+}
+
+/**
+ * 按分类获取资产（兼容旧接口）
+ */
+function getFundsByCategory(category) {
+  if (category === 'fund') {
+    return getAssetsByType('FUND');
+  }
+  return [];
+}
+
+/**
+ * 初始化数据（首次使用）
+ */
+function initData() {
+  const mock = require('../utils/mock');
+
+  // 检查是否已初始化
+  const existing = getAssets();
+  if (existing.groups && existing.groups.length > 0) {
+    return false;
+  }
+
+  // 使用默认数据初始化
+  saveAssets(mock.defaultAssets);
+  saveGroups(mock.defaultAssets.groups.map(g => ({
+    id: g.id,
+    name: g.name,
+    color: g.color
+  })));
+
+  return true;
+}
+
+/**
+ * 清空所有数据
+ */
+function clearAllData() {
+  const storage = require('../utils/storage');
+  Object.values(storage.STORAGE_KEYS).forEach(key => {
+    storage.remove(key);
+  });
+  return true;
+}
+
+/**
+ * 导出数据为JSON
+ */
+function exportData() {
+  const assets = getAssets();
+  const groups = getGroups();
+  const prefs = storage.get(storage.STORAGE_KEYS.USER_PREFERENCES, {});
+
+  return {
+    version: '2.0',
+    exportTime: new Date().toISOString(),
+    data: {
+      assets,
+      groups,
+      preferences: prefs
+    }
+  };
+}
+
+/**
+ * 导入JSON数据
+ */
+function importData(jsonData) {
+  try {
+    if (!jsonData || !jsonData.data) {
+      return { success: false, message: '无效的数据格式' };
+    }
+
+    const { assets, groups, preferences } = jsonData.data;
+
+    if (assets) {
+      saveAssets(assets);
+    }
+
+    if (groups) {
+      saveGroups(groups);
+    }
+
+    if (preferences) {
+      storage.set(storage.STORAGE_KEYS.USER_PREFERENCES, preferences);
+    }
+
+    return { success: true };
+  } catch (e) {
+    return { success: false, message: '导入失败: ' + e.message };
+  }
+}
+
+/**
+ * 刷新资产实时行情
+ */
+async function refreshAssetPrices() {
+  const assets = getAssets();
+  const allAssets = [];
+
+  assets.groups.forEach(group => {
+    group.assets.forEach(asset => {
+      allAssets.push({ ...asset, groupId: group.id });
+    });
+  });
+
+  // 获取行情
+  const quotes = await marketService.getAssetQuotes(allAssets);
+
+  // 更新资产价格
+  let updated = false;
+  assets.groups.forEach(group => {
+    group.assets.forEach(asset => {
+      if (asset.type === 'FUND' && quotes[asset.code]) {
+        const quote = quotes[asset.code];
+        asset.currentPrice = quote.current || asset.currentPrice;
+        asset.name = quote.name || asset.name; // 更新名称
+        updated = true;
+      } else if (asset.type === 'STOCK' && quotes[asset.code]) {
+        const quote = quotes[asset.code];
+        asset.currentPrice = quote.current || asset.currentPrice;
+        asset.name = quote.name || asset.name;
+        updated = true;
+      }
+    });
+  });
+
+  if (updated) {
+    saveAssets(assets);
+  }
+
+  return { success: true, updated };
+}
+
 module.exports = {
   getGroups,
   saveGroups,
@@ -186,9 +342,16 @@ module.exports = {
   saveAssets,
   calculateStatistics,
   getAssetsByGroup,
+  getAssetsByType,
+  getFundsByCategory,
   addAsset,
   updateAsset,
   deleteAsset,
   toggleAmountVisibility,
-  getAmountVisibility
+  getAmountVisibility,
+  initData,
+  clearAllData,
+  exportData,
+  importData,
+  refreshAssetPrices
 };
