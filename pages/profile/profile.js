@@ -87,6 +87,12 @@ Page({
       return;
     }
 
+    // 隐私协议跳转
+    if (page === 'privacy') {
+      wx.navigateTo({ url: '/pages/privacy/privacy' });
+      return;
+    }
+
     const featureInfo = {
       statistics: '资产统计 - 详细分析报告功能',
       strategy: '投资策略 - 个性化投资建议'

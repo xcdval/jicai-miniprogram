@@ -1,0 +1,57 @@
+<view class="container">
+  <!-- 状态栏 -->
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <!-- 导航栏 -->
+  <view class="nav-bar" style="height: {{navBarHeight}}px;">
+    <view class="nav-btn" bindtap="goBack">‹</view>
+    <view class="nav-title">隐私协议</view>
+    <view class="nav-btn" style="visibility: hidden;"></view>
+  </view>
+
+  <view class="content">
+    <view class="policy-card">
+      <view class="policy-title">集财小程序隐私协议</view>
+      <view class="policy-date">更新日期：2026年4月26日</view>
+
+      <view class="policy-section">
+        <view class="section-title">一、信息收集</view>
+        <view class="section-content">
+          我们收集您主动提供的资产信息（基金代码、持有份额、成本价等），以及市场行情数据用于收益计算。所有数据仅存储在您的设备本地，不会上传至任何服务器。
+        </view>
+      </view>
+
+      <view class="policy-section">
+        <view class="section-title">二、数据使用</view>
+        <view class="section-content">
+          您的资产数据仅用于：收益计算、风险分析、提醒通知。我们不会将您的财务数据用于任何商业目的，也不会与第三方共享。
+        </view>
+      </view>
+
+      <view class="policy-section">
+        <view class="section-title">三、数据安全</view>
+        <view class="section-content">
+          所有数据通过微信本地存储机制保存，不经过任何第三方服务器。您可以随时通过"清空数据"功能删除所有存储的信息。
+        </view>
+      </view>
+
+      <view class="policy-section">
+        <view class="section-title">四、第三方API</view>
+        <view class="section-content">
+          为提供实时行情功能，我们接入了以下第三方服务：天天基金（行情数据）、新浪财经（股票行情）。这些服务仅用于获取公开市场数据，不涉及您的个人信息。
+        </view>
+      </view>
+
+      <view class="policy-section">
+        <view class="section-title">五、联系我们</view>
+        <view class="section-content">
+          如您对本隐私政策有任何疑问，请联系小程序客服。我们将在15个工作日内回复您的请求。
+        </view>
+      </view>
+    </view>
+
+    <view class="agree-section">
+      <view class="agree-text">使用本小程序即表示您同意上述隐私协议</view>
+    </view>
+  </view>
+</view>
