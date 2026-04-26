@@ -14,6 +14,8 @@ Page({
     mode: 'add',
     // 资产类型: 'FUND' 基金, 'STOCK' 股票, 'DEPOSIT' 存款
     assetType: 'FUND',
+    // 当前编辑的资产ID
+    currentAssetId: '',
     // 表单数据
     form: {
       name: '',
@@ -54,7 +56,10 @@ Page({
 
     // 编辑模式
     if (options.id) {
-      this.setData({ mode: 'edit' });
+      this.setData({
+        mode: 'edit',
+        currentAssetId: options.id
+      });
       this.loadAssetData(options.id);
     }
 
@@ -273,12 +278,8 @@ Page({
 
     let result;
     if (mode === 'edit') {
-      // 编辑模式
-      const pages = getCurrentPages();
-      const prevPage = pages[pages.length - 2];
-      if (prevPage && prevPage.options && prevPage.options.id) {
-        result = assetService.updateAsset(prevPage.options.id, assetData);
-      }
+      // 编辑模式 - 直接使用保存的 assetId
+      result = assetService.updateAsset(this.data.currentAssetId, assetData);
     } else {
       // 添加模式
       result = assetService.addAsset(selectedGroupId, assetData);
@@ -298,5 +299,29 @@ Page({
         icon: 'none'
       });
     }
+  },
+
+  // 删除资产（仅编辑模式可用）
+  deleteAsset() {
+    if (!this.data.currentAssetId) return;
+
+    wx.showModal({
+      title: '删除确认',
+      content: '确定要删除这条资产吗？此操作无法撤销。',
+      confirmColor: '#ef4444',
+      success: (res) => {
+        if (res.confirm) {
+          const result = assetService.deleteAsset(this.data.currentAssetId);
+          if (result.success) {
+            wx.showToast({ title: '已删除', icon: 'success' });
+            setTimeout(() => {
+              wx.navigateBack();
+            }, 1500);
+          } else {
+            wx.showToast({ title: result.message || '删除失败', icon: 'none' });
+          }
+        }
+      }
+    });
   }
 });

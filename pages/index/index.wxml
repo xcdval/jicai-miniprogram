@@ -9,7 +9,9 @@
   <view class="nav-bar" style="height: {{navBarHeight}}px;">
     <view class="nav-btn" style="visibility: hidden;">‹</view>
     <view class="nav-title">全资产管理工具</view>
-    <view class="nav-btn" bindtap="toggleTheme">◐</view>
+    <view class="nav-btn refresh-btn {{isRefreshing ? 'refreshing' : ''}}" bindtap="onRefreshTap">
+      <text class="refresh-icon">↻</text>
+    </view>
   </view>
 
   <!-- 总资产卡片 - 紧凑版 -->

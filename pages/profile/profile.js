@@ -1,4 +1,6 @@
 const assetService = require('../../services/assetService');
+const intelligenceService = require('../../services/intelligenceService');
+const ocrService = require('../../services/ocrService');
 
 Page({
   data: {
@@ -13,7 +15,17 @@ Page({
     healthScore: 82,
     reminderCount: 12,
     version: '1.0.0',
-    storageInfo: {}
+    storageInfo: {},
+    // DeepSeek API 配置
+    deepseekApiKey: '',
+    deepseekModel: 'deepseek-chat',
+    deepseekUseAI: false,
+    showApiKey: false,
+    // OCR 配置
+    ocrSecretId: '',
+    ocrSecretKey: '',
+    ocrUseCloud: false,
+    showOcrSecretKey: false
   },
   onLoad() {
     const sys = wx.getSystemInfoSync();
@@ -24,6 +36,8 @@ Page({
     });
     this.setData({ showAmount: assetService.getAmountVisibility() });
     this.loadUserData();
+    this.loadDeepseekConfig();
+    this.loadOcrConfig();
   },
   loadUserData() {
     // 从本地存储加载用户数据
@@ -37,6 +51,22 @@ Page({
         reminderCount: userData.reminderCount || 12
       });
     }
+  },
+  loadDeepseekConfig() {
+    const config = intelligenceService.getDeepseekConfig();
+    this.setData({
+      deepseekApiKey: config.apiKey || '',
+      deepseekModel: config.model || 'deepseek-chat',
+      deepseekUseAI: config.useAI
+    });
+  },
+  loadOcrConfig() {
+    const config = ocrService.getOcrConfig();
+    this.setData({
+      ocrSecretId: config.secretId || '',
+      ocrSecretKey: config.secretKey || '',
+      ocrUseCloud: config.useCloudOCR
+    });
   },
   toggleAmount() {
     const show = assetService.toggleAmountVisibility();
@@ -52,6 +82,52 @@ Page({
   },
   showToast() {
     wx.showToast({ title: '功能开发中', icon: 'none' });
+  },
+
+  // DeepSeek API Key 输入
+  onApiKeyInput(e) {
+    this.setData({ deepseekApiKey: e.detail.value });
+  },
+  onModelInput(e) {
+    this.setData({ deepseekModel: e.detail.value });
+  },
+  onUseAIToggle(e) {
+    this.setData({ deepseekUseAI: e.detail.value });
+  },
+  toggleShowApiKey() {
+    this.setData({ showApiKey: !this.data.showApiKey });
+  },
+  saveDeepseekConfig() {
+    const config = {
+      apiKey: this.data.deepseekApiKey.trim(),
+      model: this.data.deepseekModel.trim() || 'deepseek-chat',
+      useAI: this.data.deepseekUseAI
+    };
+    intelligenceService.saveDeepseekConfig(config);
+    wx.showToast({ title: 'DeepSeek 配置已保存', icon: 'success' });
+  },
+
+  // OCR 配置
+  onOcrSecretIdInput(e) {
+    this.setData({ ocrSecretId: e.detail.value });
+  },
+  onOcrSecretKeyInput(e) {
+    this.setData({ ocrSecretKey: e.detail.value });
+  },
+  onOcrUseCloudToggle(e) {
+    this.setData({ ocrUseCloud: e.detail.value });
+  },
+  toggleShowOcrSecretKey() {
+    this.setData({ showOcrSecretKey: !this.data.showOcrSecretKey });
+  },
+  saveOcrConfig() {
+    const config = {
+      secretId: this.data.ocrSecretId.trim(),
+      secretKey: this.data.ocrSecretKey.trim(),
+      useCloudOCR: this.data.ocrUseCloud
+    };
+    ocrService.saveOcrConfig(config);
+    wx.showToast({ title: 'OCR 配置已保存', icon: 'success' });
   },
 
   // 导出数据

@@ -1,9 +1,6 @@
 <view class="container">
   <!-- 状态栏 -->
-  <view class="status-bar" style="height: {{statusBarHeight}}px;">
-    <text class="status-time">9:41</text>
-    <text class="status-dots">●●●</text>
-  </view>
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
 
   <!-- 导航栏 -->
   <view class="nav-bar" style="height: {{navBarHeight}}px;">
@@ -53,12 +50,11 @@
       <view class="deposit-icon">D</view>
       <view class="deposit-info">
         <view class="deposit-name">{{item.name}}</view>
-        <view class="deposit-meta">{{item.bank}} · 年化 {{item.rate}}% · {{item.term}}</view>
-        <view class="deposit-date">到期日: {{item.dueDate}}</view>
+        <view class="deposit-meta">{{item.platform}} · 年化 {{item.annualRate}}% · {{item.endDate ? '到期:' + item.endDate : '活期'}}</view>
       </view>
       <view class="deposit-value">
         <view class="deposit-amount">{{item.amount}}</view>
-        <view class="deposit-daily">日收益 {{item.dailyIncome}}</view>
+        <view class="deposit-daily">日收益 ¥{{item.dailyIncome}}</view>
       </view>
     </view>
   </view>

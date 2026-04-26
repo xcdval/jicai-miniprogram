@@ -7,7 +7,7 @@
 
   <!-- 导航栏 -->
   <view class="nav-bar" style="height: {{navBarHeight}}px;">
-    <view class="nav-btn" bindtap="switchTab" data-tab="holding">持仓分析</view>
+    <view class="nav-btn" bindtap="goBack">‹</view>
     <view class="nav-title">收益分析</view>
     <view class="nav-btn" bindtap="refreshData">↻</view>
   </view>
@@ -16,35 +16,45 @@
   <view class="stats-overview-card">
     <view class="stats-grid">
       <view class="stats-item {{stats.totalReturn >= 0 ? 'positive' : 'negative'}}">
-        <view class="stats-value-large">
+        <view class="stats-value-container">
           <text class="stats-sign">{{stats.totalReturn >= 0 ? '+' : ''}}</text>
           <text class="stats-number">{{stats.totalReturnText}}</text>
         </view>
-        <view class="stats-label">累计收益</view>
+        <text class="stats-label">累计收益</text>
       </view>
       <view class="stats-divider"></view>
       <view class="stats-item {{stats.totalReturnPercent >= 0 ? 'positive' : 'negative'}}">
-        <view class="stats-value-large">
+        <view class="stats-value-container">
           <text class="stats-sign">{{stats.totalReturnPercent >= 0 ? '+' : ''}}</text>
-          <text class="stats-number">{{stats.totalReturnPercent.toFixed(2)}}</text>
+          <text class="stats-number">{{stats.totalReturnPercent}}</text>
           <text class="stats-unit">%</text>
         </view>
-        <view class="stats-label">收益率</view>
+        <text class="stats-label">收益率</text>
       </view>
       <view class="stats-divider"></view>
-      <view class="stats-item negative">
-        <view class="stats-value-large">
+      <view class="stats-item {{stats.maxDrawdown >= 0 ? 'positive' : 'negative'}}">
+        <view class="stats-value-container">
+          <text class="stats-sign">{{stats.maxDrawdown >= 0 ? '+' : ''}}</text>
           <text class="stats-number">{{stats.maxDrawdown}}</text>
           <text class="stats-unit">%</text>
         </view>
-        <view class="stats-label">最大回撤</view>
+        <text class="stats-label">最大回撤</text>
       </view>
     </view>
   </view>
 
-  <!-- 时间范围切换 -->
-  <view class="time-range-section">
-    <view class="time-range-tabs">
+  <!-- 视图切换 -->
+  <view class="view-control">
+    <view class="view-mode-tabs">
+      <view class="view-tab {{viewMode === item.key ? 'active' : ''}}"
+            wx:for="{{viewModes}}"
+            wx:key="key"
+            data-mode="{{item.key}}"
+            bindtap="switchViewMode">
+        {{item.name}}
+      </view>
+    </view>
+    <view class="time-range-tabs" wx:if="{{viewMode === 'list'}}">
       <view class="range-tab {{timeRange === item.key ? 'active' : ''}}"
             wx:for="{{timeRanges}}"
             wx:key="key"
@@ -55,67 +65,167 @@
     </view>
   </view>
 
-  <!-- 收益走势图表 -->
-  <view class="chart-card">
-    <view class="chart-header">
-      <text class="chart-title">收益走势图</text>
-      <text class="chart-subtitle">{{currentRangeName}}</text>
-    </view>
-    <view class="chart-container">
-      <profit-line data="{{profitTrendData}}" type="profit"></profit-line>
-    </view>
-    <view class="chart-legend">
-      <view class="legend-item">
-        <view class="legend-dot" style="background: #2563eb;"></view>
-        <text class="legend-text">累计收益</text>
+  <!-- 收益曲线视图 -->
+  <block wx:if="{{viewMode === 'list'}}">
+    <view class="chart-card">
+      <view class="chart-header">
+        <text class="chart-title">收益走势图</text>
+        <text class="chart-subtitle">{{currentRangeName}}</text>
+      </view>
+      <view class="chart-container">
+        <profit-line data="{{profitTrendData}}" type="profit"></profit-line>
+      </view>
+      <view class="chart-legend">
+        <view class="legend-item">
+          <view class="legend-dot" style="background: #2563eb;"></view>
+          <text class="legend-text">累计收益</text>
+        </view>
       </view>
     </view>
-  </view>
 
-  <!-- 收益明细卡片 -->
-  <view class="section-title">收益明细</view>
-  <view class="profit-detail-card">
-    <view class="detail-item">
-      <view class="detail-icon" style="background: rgba(37, 99, 235, 0.1);">📈</view>
-      <view class="detail-info">
-        <text class="detail-name">今日收益</text>
-        <text class="detail-date">{{todayDate}}</text>
+    <view class="section-title">收益明细</view>
+    <view class="profit-detail-card">
+      <view class="detail-item">
+        <view class="detail-icon" style="background: rgba(37, 99, 235, 0.1);">📈</view>
+        <view class="detail-info">
+          <text class="detail-name">今日收益</text>
+          <text class="detail-date">{{todayDate}}</text>
+        </view>
+        <view class="detail-value-group">
+          <view class="detail-value {{todayProfit >= 0 ? 'positive' : 'negative'}}">
+            {{todayProfit >= 0 ? '+' : ''}}{{todayProfitText}}
+          </view>
+          <view class="detail-percent {{todayProfit >= 0 ? 'positive' : 'negative'}}">
+            {{todayProfitPercent >= 0 ? '+' : ''}}{{todayProfitPercent}}%
+          </view>
+        </view>
       </view>
-      <view class="detail-value {{todayProfit >= 0 ? 'positive' : 'negative'}}">
-        {{todayProfit >= 0 ? '+' : ''}}{{todayProfitText}}
+      <view class="detail-item">
+        <view class="detail-icon" style="background: rgba(245, 158, 11, 0.1);">📅</view>
+        <view class="detail-info">
+          <text class="detail-name">本月收益</text>
+          <text class="detail-date">{{monthDateRange}}</text>
+        </view>
+        <view class="detail-value-group">
+          <view class="detail-value {{monthProfit >= 0 ? 'positive' : 'negative'}}">
+            {{monthProfit >= 0 ? '+' : ''}}{{monthProfitText}}
+          </view>
+          <view class="detail-percent {{monthProfit >= 0 ? 'positive' : 'negative'}}">
+            {{monthProfitPercent >= 0 ? '+' : ''}}{{monthProfitPercent}}%
+          </view>
+        </view>
+      </view>
+      <view class="detail-item">
+        <view class="detail-icon" style="background: rgba(139, 92, 246, 0.1);">🏆</view>
+        <view class="detail-info">
+          <text class="detail-name">本年收益</text>
+          <text class="detail-date">{{yearDateRange}}</text>
+        </view>
+        <view class="detail-value-group">
+          <view class="detail-value {{yearProfit >= 0 ? 'positive' : 'negative'}}">
+            {{yearProfit >= 0 ? '+' : ''}}{{yearProfitText}}
+          </view>
+          <view class="detail-percent {{yearProfit >= 0 ? 'positive' : 'negative'}}">
+            {{yearProfitPercent >= 0 ? '+' : ''}}{{yearProfitPercent}}%
+          </view>
+        </view>
       </view>
     </view>
-    <view class="detail-item">
-      <view class="detail-icon" style="background: rgba(16, 185, 129, 0.1);">📊</view>
-      <view class="detail-info">
-        <text class="detail-name">本周收益</text>
-        <text class="detail-date">{{weekDateRange}}</text>
+  </block>
+
+  <!-- 收益日历视图 -->
+  <block wx:if="{{viewMode === 'calendar'}}">
+    <view class="calendar-card">
+      <!-- 头部 -->
+      <view class="calendar-header">
+        <view class="calendar-nav {{calendarPeriodMode === 'years' ? 'disabled' : ''}}" bindtap="prevPeriod">‹</view>
+        <text class="calendar-title" bindtap="tapCalendarTitle">{{calendarPeriodMode === 'month' ? calendarMonth : calendarPeriodMode === 'year' ? calendarYear + '年' : '近5年'}}</text>
+        <view class="calendar-nav {{calendarPeriodMode === 'years' ? 'disabled' : ''}}" bindtap="nextPeriod">›</view>
       </view>
-      <view class="detail-value {{weekProfit >= 0 ? 'positive' : 'negative'}}">
-        {{weekProfit >= 0 ? '+' : ''}}{{weekProfitText}}
+
+      <!-- 周期切换 -->
+      <view class="period-tabs">
+        <view class="period-tab {{calendarPeriodMode === item.key ? 'active' : ''}}"
+              wx:for="{{calendarPeriodModes}}"
+              wx:key="key"
+              data-mode="{{item.key}}"
+              bindtap="switchCalendarPeriodMode">
+          {{item.name}}
+        </view>
+      </view>
+
+      <!-- 月视图 -->
+      <block wx:if="{{calendarPeriodMode === 'month'}}">
+        <view class="month-calendar-grid">
+          <view class="calendar-weekday-row">
+            <text class="weekday">一</text>
+            <text class="weekday">二</text>
+            <text class="weekday">三</text>
+            <text class="weekday">四</text>
+            <text class="weekday">五</text>
+            <text class="weekday">六</text>
+            <text class="weekday">日</text>
+          </view>
+          <view class="calendar-days-container">
+            <view class="calendar-day-row" wx:for="{{calendarWeeks}}" wx:key="index">
+              <view class="calendar-day-cell {{day.empty ? 'empty' : ''}} {{day.isToday ? 'today' : ''}}"
+                    wx:for="{{item.days}}"
+                    wx:for-item="day"
+                    wx:key="day"
+                    bindtap="tapCalendarDay"
+                    data-date="{{day.dateStr}}">
+                <text class="day-num" wx:if="{{!day.empty}}">{{day.day}}</text>
+                <text class="day-profit {{day.profit >= 0 ? 'up' : 'down'}}" wx:if="{{!day.empty && day.profit !== undefined}}">
+                  {{calendarDisplayMode === 'profit' ? '¥' : ''}}{{day.profit >= 0 ? '+' : ''}}{{calendarDisplayMode === 'profit' ? day.profit : day.percent}}{{calendarDisplayMode === 'profit' ? '' : '%'}}
+                </text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <!-- 年视图 -->
+      <block wx:if="{{calendarPeriodMode === 'year'}}">
+        <view class="year-grid">
+          <view class="year-month-cell {{item.isCurrentMonth ? 'current' : ''}}"
+                wx:for="{{yearData}}"
+                wx:key="month"
+                bindtap="tapYearMonth"
+                data-month="{{item.month}}">
+            <text class="year-month-label">{{item.month}}月</text>
+            <text class="year-month-value {{item.profit >= 0 ? 'up' : 'down'}}">
+              {{calendarDisplayMode === 'profit' ? '¥' : ''}}{{item.profit >= 0 ? '+' : ''}}{{calendarDisplayMode === 'profit' ? item.profit : item.percent}}{{calendarDisplayMode === 'profit' ? '' : '%'}}
+            </text>
+          </view>
+        </view>
+      </block>
+
+      <!-- 多年视图 -->
+      <block wx:if="{{calendarPeriodMode === 'years'}}">
+        <view class="years-grid">
+          <view class="years-year-cell {{item.isCurrentYear ? 'current' : ''}}"
+                wx:for="{{yearsData}}"
+                wx:key="year"
+                bindtap="tapYearsYear"
+                data-year="{{item.year}}">
+            <text class="years-year-label">{{item.year}}年</text>
+            <text class="years-year-value {{item.profit >= 0 ? 'up' : 'down'}}">
+              {{calendarDisplayMode === 'profit' ? '¥' : ''}}{{item.profit >= 0 ? '+' : ''}}{{calendarDisplayMode === 'profit' ? item.profit : item.percent}}{{calendarDisplayMode === 'profit' ? '' : '%'}}
+            </text>
+          </view>
+        </view>
+      </block>
+
+      <!-- 底部控制栏 -->
+      <view class="calendar-footer">
+        <view class="display-toggle" bindtap="toggleCalendarDisplayMode">
+          <text class="toggle-btn {{calendarDisplayMode === 'profit' ? 'active' : ''}}">¥</text>
+          <text class="toggle-divider">/</text>
+          <text class="toggle-btn {{calendarDisplayMode === 'percent' ? 'active' : ''}}">%</text>
+        </view>
       </view>
     </view>
-    <view class="detail-item">
-      <view class="detail-icon" style="background: rgba(245, 158, 11, 0.1);">📅</view>
-      <view class="detail-info">
-        <text class="detail-name">本月收益</text>
-        <text class="detail-date">{{monthDateRange}}</text>
-      </view>
-      <view class="detail-value {{monthProfit >= 0 ? 'positive' : 'negative'}}">
-        {{monthProfit >= 0 ? '+' : ''}}{{monthProfitText}}
-      </view>
-    </view>
-    <view class="detail-item">
-      <view class="detail-icon" style="background: rgba(139, 92, 246, 0.1);">🏆</view>
-      <view class="detail-info">
-        <text class="detail-name">本年收益</text>
-        <text class="detail-date">{{yearDateRange}}</text>
-      </view>
-      <view class="detail-value {{yearProfit >= 0 ? 'positive' : 'negative'}}">
-        {{yearProfit >= 0 ? '+' : ''}}{{yearProfitText}}
-      </view>
-    </view>
-  </view>
+  </block>
 
   <!-- 收益分析 -->
   <view class="section-title">收益分析</view>
@@ -157,7 +267,30 @@
     </view>
   </view>
 
-  <!-- 查看详细报告按钮 -->
   <view class="btn-primary" bindtap="viewDetailReport">查看详细收益报告</view>
+
+  <!-- 日期详情弹窗 -->
+  <view class="day-detail-mask" wx:if="{{selectedProfitDetail}}" bindtap="closeDayDetail">
+    <view class="day-detail-card" catchtap="preventBubble">
+      <view class="day-detail-header">
+        <text class="day-detail-date">{{selectedProfitDetail.title}}</text>
+        <view class="day-detail-close" bindtap="closeDayDetail">×</view>
+      </view>
+      <view class="day-detail-content">
+        <view class="day-detail-item">
+          <text class="day-detail-label">{{selectedProfitDetail.type === 'day' ? '当日' : selectedProfitDetail.type === 'month' ? '当月' : selectedProfitDetail.type === 'year' ? '当年' : '近5年'}}收益</text>
+          <text class="day-detail-value {{selectedProfitDetail.profit >= 0 ? 'up' : 'down'}}">
+            ¥{{selectedProfitDetail.profit >= 0 ? '+' : ''}}{{selectedProfitDetail.profit}}
+          </text>
+        </view>
+        <view class="day-detail-item">
+          <text class="day-detail-label">收益率</text>
+          <text class="day-detail-value {{selectedProfitDetail.percent >= 0 ? 'up' : 'down'}}">
+            {{selectedProfitDetail.percent >= 0 ? '+' : ''}}{{selectedProfitDetail.percent}}%
+          </text>
+        </view>
+      </view>
+    </view>
+  </view>
 </view>
 <tab-bar activeIndex="3"></tab-bar>

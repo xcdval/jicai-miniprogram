@@ -45,17 +45,11 @@
 }
 
 .nav-btn {
-  width: 64rpx;
-  height: 64rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1rpx solid rgba(226, 232, 240, 0.8);
+  padding: 12rpx 24rpx;
+  font-size: 26rpx;
+  color: #64748b;
+  background: rgba(241, 245, 249, 0.8);
   border-radius: 9999rpx;
-  font-size: 36rpx;
-  color: #2563eb;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
 }
 
 /* 持仓健康度评分卡片 */
@@ -264,16 +258,16 @@
 /* 统计概览卡片 */
 .stats-overview-card {
   background: #ffffff;
-  border-radius: 28rpx;
-  padding: 40rpx 24rpx;
+  border-radius: 24rpx;
+  padding: 24rpx 16rpx;
   margin: 24rpx 32rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06), 0 2rpx 4rpx rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
   border: 1rpx solid rgba(226, 232, 240, 0.8);
 }
 
 .stats-grid {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
 }
 
@@ -282,61 +276,32 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12rpx 0;
+  justify-content: center;
+  padding: 8rpx 4rpx;
 }
 
-.stats-item.positive .stats-value-large {
-  color: #ef4444;
-}
-
-.stats-item.negative .stats-value-large {
-  color: #10b981;
-}
-
-.stats-value-large {
+.stats-value-container {
   display: flex;
   align-items: baseline;
+  justify-content: center;
   font-family: 'DIN Alternate', 'SF Mono', 'Roboto Mono', monospace;
   font-weight: 700;
-  margin-bottom: 12rpx;
+  gap: 4rpx;
 }
 
-.stats-sign {
-  font-size: 36rpx;
-  font-weight: 600;
-  margin-right: 2rpx;
-}
+.stats-item.positive .stats-value-container { color: #ef4444; }
+.stats-item.negative .stats-value-container { color: #10b981; }
 
-.stats-number {
-  font-size: 52rpx;
-  letter-spacing: -0.02em;
-}
-
-.stats-unit {
-  font-size: 32rpx;
-  font-weight: 600;
-  margin-left: 2rpx;
-}
-
-.stats-label {
-  font-size: 24rpx;
-  color: #94a3b8;
-  font-weight: 500;
-}
+.stats-sign { font-size: 24rpx; font-weight: 600; }
+.stats-number { font-size: 32rpx; letter-spacing: -0.02em; }
+.stats-unit { font-size: 20rpx; font-weight: 600; }
+.stats-label { font-size: 20rpx; color: #94a3b8; font-weight: 500; white-space: nowrap; margin-top: 6rpx; }
 
 .stats-divider {
-  width: 2rpx;
+  width: 1rpx;
   height: 80rpx;
   background: linear-gradient(180deg, transparent, #e2e8f0, transparent);
-}
-
-/* 涨跌颜色 - 中文版 */
-.stats-item.positive .stats-value-large {
-  color: #ef4444;
-}
-
-.stats-item.negative .stats-value-large {
-  color: #10b981;
+  align-self: center;
 }
 
 /* 资产配置卡片 - 参考首页设计 */

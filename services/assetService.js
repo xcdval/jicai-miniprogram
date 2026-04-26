@@ -38,29 +38,49 @@ function saveAssets(assets) {
 
 /**
  * 计算资产统计信息
+ * @param {Object} marketQuotes - 市场行情数据（可选）
  */
-function calculateStatistics() {
+function calculateStatistics(marketQuotes = {}) {
   const assets = getAssets();
   let totalValue = 0;
   let totalCost = 0;
   let todayProfit = 0;
 
   const categoryStats = {
-    FUND: { value: 0, cost: 0, count: 0 },
-    STOCK: { value: 0, cost: 0, count: 0 },
-    DEPOSIT: { value: 0, cost: 0, count: 0 }
+    FUND: { value: 0, cost: 0, count: 0, todayProfit: 0 },
+    STOCK: { value: 0, cost: 0, count: 0, todayProfit: 0 },
+    DEPOSIT: { value: 0, cost: 0, count: 0, todayProfit: 0 }
   };
+
+  const assetMetrics = [];
 
   assets.groups.forEach(group => {
     group.assets.forEach(asset => {
-      let value, cost;
+      let value, cost, todayChangePercent = 0;
 
       if (asset.type === 'DEPOSIT') {
-        value = asset.amount;
-        cost = asset.amount;
+        value = asset.amount || 0;
+        cost = asset.amount || 0;
+        todayChangePercent = 0;
+        const days = getDepositDays(asset);
+        const yearlyIncome = value * (asset.annualRate || 0) / 100;
+        todayProfit = parseFloat((todayProfit + yearlyIncome / 365).toFixed(2));
       } else {
-        value = asset.currentPrice * asset.shares;
-        cost = asset.costPrice * asset.shares;
+        cost = (asset.costPrice || 0) * (asset.shares || 0);
+
+        // 从行情获取当前价格
+        const quote = marketQuotes[asset.code];
+        if (quote) {
+          value = (quote.current || asset.currentPrice || asset.costPrice || 0) * (asset.shares || 0);
+          todayChangePercent = quote.changePercent || 0;
+        } else {
+          value = (asset.currentPrice || asset.costPrice || 0) * (asset.shares || 0);
+        }
+
+        // 计算今日盈亏
+        const todayChangeValue = parseFloat((value * todayChangePercent / 100).toFixed(2));
+        todayProfit = parseFloat((todayProfit + todayChangeValue).toFixed(2));
+        categoryStats[asset.type].todayProfit = parseFloat(((categoryStats[asset.type].todayProfit || 0) + todayChangeValue).toFixed(2));
       }
 
       totalValue += value;
@@ -73,14 +93,25 @@ function calculateStatistics() {
         categoryStats[asset.type].count += 1;
       }
 
-      // 模拟今日盈亏（实际应从历史数据计算）
-      const dailyChange = (Math.random() - 0.4) * value * 0.02;
-      todayProfit += dailyChange;
+      // 保存资产计算数据
+      const profit = value - cost;
+      const profitPercent = cost > 0 ? parseFloat((profit / cost * 100).toFixed(2)) : 0;
+
+      assetMetrics.push({
+        ...asset,
+        groupName: group.name,
+        marketValue: value,
+        costValue: cost,
+        profit: profit,
+        profitPercent: profitPercent,
+        todayChange: todayChangePercent,
+        todayProfit: parseFloat((value * todayChangePercent / 100).toFixed(2))
+      });
     });
   });
 
   const totalProfit = totalValue - totalCost;
-  const totalProfitPercent = totalCost > 0 ? (totalProfit / totalCost) * 100 : 0;
+  const totalProfitPercent = totalCost > 0 ? parseFloat((totalProfit / totalCost * 100).toFixed(2)) : 0;
 
   return {
     totalValue,
@@ -89,7 +120,153 @@ function calculateStatistics() {
     totalProfitPercent,
     todayProfit,
     categoryStats,
+    assetMetrics,
     updateTime: new Date().toLocaleString('zh-CN')
+  };
+}
+
+/**
+ * 获取收益排行榜
+ * @param {string} sortBy - 排序字段：profit(盈亏额)、profitPercent(收益率)
+ * @param {number} limit - 返回数量
+ * @returns {Array} 排序后的资产列表
+ */
+function getProfitRanking(sortBy = 'profit', limit = 10) {
+  const stats = calculateStatistics();
+  const assets = stats.assetMetrics || [];
+
+  // 过滤掉存款（存款收益率固定，不参与排行）
+  const filtered = assets.filter(a => a.type !== 'DEPOSIT');
+
+  // 排序
+  filtered.sort((a, b) => {
+    if (sortBy === 'profitPercent') {
+      return (b.profitPercent || 0) - (a.profitPercent || 0);
+    }
+    return (b.profit || 0) - (a.profit || 0);
+  });
+
+  return filtered.slice(0, limit).map((asset, index) => ({
+    rank: index + 1,
+    name: asset.name,
+    code: asset.code,
+    type: asset.type,
+    profit: asset.profit || 0,
+    profitPercent: asset.profitPercent || 0,
+    marketValue: asset.marketValue || 0
+  }));
+}
+
+/**
+ * 计算持仓健康评分
+ * @returns {Object} 健康评分及相关建议
+ */
+function calculateHealthScore() {
+  const stats = calculateStatistics();
+  const { categoryStats, totalValue } = stats;
+
+  let score = 100;
+  const suggestions = [];
+
+  // 1. 检查分散度（持仓数量）
+  const totalCount = (categoryStats.FUND?.count || 0) +
+                     (categoryStats.STOCK?.count || 0) +
+                     (categoryStats.DEPOSIT?.count || 0);
+
+  if (totalCount < 3) {
+    score -= 15;
+    suggestions.push({
+      type: 'warning',
+      title: '持仓过于集中',
+      content: '建议增加持仓品种，分散投资风险。当前持仓 ' + totalCount + ' 种。'
+    });
+  } else if (totalCount >= 5 && totalCount <= 15) {
+    score += 5; // 适当分散
+  }
+
+  // 2. 检查存款比例（防御性配置）
+  const depositRatio = totalValue > 0 ? (categoryStats.DEPOSIT?.value || 0) / totalValue * 100 : 0;
+  if (depositRatio < 10) {
+    score -= 10;
+    suggestions.push({
+      type: 'warning',
+      title: '防御性配置不足',
+      content: '建议配置 10%-20% 的存款或低风险资产，提高组合稳定性。'
+    });
+  } else if (depositRatio >= 10 && depositRatio <= 30) {
+    score += 5;
+  } else if (depositRatio > 50) {
+    score -= 5;
+    suggestions.push({
+      type: 'info',
+      title: '存款比例较高',
+      content: '当前存款占比 ' + depositRatio.toFixed(1) + '%，可适当提高收益资产配置。'
+    });
+  }
+
+  // 3. 检查股票比例（高风险资产）
+  const stockRatio = totalValue > 0 ? (categoryStats.STOCK?.value || 0) / totalValue * 100 : 0;
+  if (stockRatio > 60) {
+    score -= 15;
+    suggestions.push({
+      type: 'warning',
+      title: '股票仓位过重',
+      content: '股票占比 ' + stockRatio.toFixed(1) + '%，建议控制在 50% 以内。'
+    });
+  }
+
+  // 4. 检查基金是否有持仓
+  if (categoryStats.FUND?.count === 0 && categoryStats.STOCK?.count === 0) {
+    score -= 20;
+    suggestions.push({
+      type: 'error',
+      title: '无有效持仓',
+      content: '请添加基金或股票持仓以获取收益。'
+    });
+  }
+
+  // 5. 检查总体盈亏
+  const { totalProfitPercent } = stats;
+  if (totalProfitPercent > 20) {
+    suggestions.push({
+      type: 'success',
+      title: '收益表现优秀',
+      content: '总体收益率 ' + totalProfitPercent.toFixed(2) + '%，继续保持！'
+    });
+  } else if (totalProfitPercent < -10) {
+    suggestions.push({
+      type: 'warning',
+      title: '持仓出现较大亏损',
+      content: '总体亏损 ' + Math.abs(totalProfitPercent).toFixed(2) + '%，注意控制风险。'
+    });
+  }
+
+  // 确保分数在 0-100 范围内
+  score = Math.max(0, Math.min(100, score));
+
+  // 确定颜色
+  let color = '#10b981'; // 绿色
+  if (score < 60) color = '#ef4444'; // 红色
+  else if (score < 75) color = '#f59e0b'; // 黄色
+
+  // 生成描述
+  let desc = '持仓结构合理';
+  if (score >= 85) desc = '持仓结构优秀，继续保持';
+  else if (score >= 75) desc = '持仓结构良好，建议适度优化';
+  else if (score >= 60) desc = '持仓风险中等，建议分散配置';
+  else desc = '持仓风险较高，建议调整配置';
+
+  return {
+    score,
+    color,
+    desc,
+    suggestions,
+    stats: {
+      totalCount,
+      depositRatio: depositRatio.toFixed(1),
+      stockRatio: stockRatio.toFixed(1),
+      fundRatio: totalValue > 0 ? ((categoryStats.FUND?.value || 0) / totalValue * 100).toFixed(1) : '0'
+    }
   };
 }
 
@@ -200,6 +377,70 @@ function getAssetsByType(type) {
   });
 
   return result;
+}
+
+/**
+ * 计算单个资产的市值和盈亏
+ * @param {Object} asset - 资产对象
+ * @param {number} todayChangePercent - 今日涨跌幅（%），默认为0
+ * @returns {Object} 包含计算后字段的资产对象
+ */
+function calculateAssetMetrics(asset, todayChangePercent = 0) {
+  const result = { ...asset };
+
+  if (asset.type === 'DEPOSIT') {
+    // 存款计算
+    const depositAmount = asset.amount || 0;
+    const annualRate = asset.annualRate || 0;
+    const days = getDepositDays(asset);
+    const yearlyIncome = depositAmount * annualRate / 100;
+    result.marketValue = depositAmount;
+    result.costValue = depositAmount;
+    result.profit = parseFloat((yearlyIncome * days / 365).toFixed(2));
+    result.profitPercent = annualRate;
+    result.todayChange = 0;
+    result.todayProfit = 0;
+    result.dailyIncome = parseFloat((depositAmount * annualRate / 365 / 100).toFixed(2));
+    result.nav = annualRate.toFixed(2);
+    result.holdings = depositAmount;
+  } else {
+    // 基金和股票计算
+    const shares = parseFloat(asset.shares) || 0;
+    const costPrice = parseFloat(asset.costPrice) || 0;
+    const currentPrice = parseFloat(asset.currentPrice) || costPrice;
+
+    result.costValue = costPrice * shares;
+    result.marketValue = currentPrice * shares;
+    result.profit = parseFloat((result.marketValue - result.costValue).toFixed(2));
+    result.profitPercent = result.costValue > 0 ? parseFloat((result.profit / result.costValue * 100).toFixed(2)) : 0;
+    result.todayChange = todayChangePercent;
+    result.todayProfit = parseFloat((result.marketValue * todayChangePercent / 100).toFixed(2));
+    result.nav = currentPrice.toFixed(4);
+    result.holdings = shares;
+  }
+
+  return result;
+}
+
+/**
+ * 计算存款天数
+ */
+function getDepositDays(asset) {
+  if (!asset.startDate) return 0;
+  const start = new Date(asset.startDate);
+  const now = new Date();
+  return Math.floor((now - start) / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * 按类型获取资产（带计算字段）
+ * @param {string} type - 资产类型 FUND/STOCK/DEPOSIT
+ * @param {number} todayChangePercent - 今日涨跌幅（默认0）
+ * @returns {Array} 带计算字段的资产列表
+ */
+function getEnrichedAssetsByType(type, todayChangePercent = 0) {
+  const rawAssets = getAssetsByType(type);
+  return rawAssets.map(asset => calculateAssetMetrics(asset, todayChangePercent));
 }
 
 /**
@@ -343,7 +584,11 @@ module.exports = {
   calculateStatistics,
   getAssetsByGroup,
   getAssetsByType,
+  getEnrichedAssetsByType,
   getFundsByCategory,
+  calculateAssetMetrics,
+  getProfitRanking,
+  calculateHealthScore,
   addAsset,
   updateAsset,
   deleteAsset,

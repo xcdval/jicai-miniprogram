@@ -11,7 +11,9 @@ Page({
     allFunds: [],
     totalMarketValue: '¥ 0',
     totalProfit: 0,
-    todayProfit: 0
+    todayProfit: 0,
+    isLoading: false,
+    lastUpdateTime: ''
   },
 
   onLoad() {
@@ -28,8 +30,26 @@ Page({
     this.loadFunds();
   },
 
+  // 下拉刷新
+  onPullDownRefresh() {
+    this.refreshFunds().then(() => {
+      wx.stopPullDownRefresh();
+    });
+  },
+
   loadFunds() {
-    const funds = assetService.getFundsByCategory('fund') || this.getMockFunds();
+    const funds = assetService.getEnrichedAssetsByType('FUND');
+    if (funds.length === 0) {
+      // 无数据时显示空状态
+      this.setData({
+        allFunds: [],
+        fundList: [],
+        totalMarketValue: '¥ 0',
+        totalProfit: 0,
+        todayProfit: 0
+      });
+      return;
+    }
     this.setData({
       allFunds: funds,
       fundList: funds
@@ -37,48 +57,24 @@ Page({
     this.calculateSummary(funds);
   },
 
-  getMockFunds() {
-    return [
-      {
-        id: 1,
-        name: '易方达蓝筹精选混合',
-        code: '005827',
-        platform: '支付宝',
-        costPrice: '2.4567',
-        nav: '2.5234',
-        marketValue: '¥ 86,400',
-        shares: '34,252',
-        profit: 5840,
-        profitPercent: 7.21,
-        todayChange: 2.3
-      },
-      {
-        id: 2,
-        name: '招商中证白酒指数',
-        code: '161725',
-        platform: '天天基金',
-        costPrice: '1.2345',
-        nav: '1.1876',
-        marketValue: '¥ 45,600',
-        shares: '38,400',
-        profit: -2340,
-        profitPercent: -5.12,
-        todayChange: -1.2
-      },
-      {
-        id: 3,
-        name: '华夏能源革新股票',
-        code: '003834',
-        platform: '支付宝',
-        costPrice: '3.4567',
-        nav: '3.7890',
-        marketValue: '¥ 22,617',
-        shares: '5,969',
-        profit: 1860,
-        profitPercent: 8.45,
-        todayChange: 3.1
-      }
-    ];
+  // 刷新基金数据（带行情）
+  async refreshFunds() {
+    this.setData({ isLoading: true });
+    try {
+      // 刷新行情
+      await assetService.refreshAssetPrices();
+      // 重新加载数据
+      this.loadFunds();
+      this.setData({
+        lastUpdateTime: format.formatTime(new Date())
+      });
+      wx.showToast({ title: '刷新成功', icon: 'success' });
+    } catch (e) {
+      console.error('刷新失败:', e);
+      wx.showToast({ title: '刷新失败', icon: 'none' });
+    } finally {
+      this.setData({ isLoading: false });
+    }
   },
 
   calculateSummary(funds) {
@@ -87,12 +83,11 @@ Page({
     let todayProfit = 0;
 
     funds.forEach(fund => {
-      const value = parseFloat(fund.marketValue.replace(/[¥,]/g, ''));
-      const shares = parseFloat(fund.shares.replace(/,/g, ''));
-      const cost = parseFloat(fund.costPrice) * shares;
+      const value = fund.marketValue || 0;
+      const cost = fund.costValue || 0;
       totalValue += value;
       totalCost += cost;
-      todayProfit += value * fund.todayChange / 100;
+      todayProfit += fund.todayProfit || 0;
     });
 
     this.setData({
@@ -118,14 +113,16 @@ Page({
     let filtered = this.data.allFunds;
 
     if (tab === 'holding') {
-      filtered = filtered.filter(f => f.shares > 0);
+      filtered = filtered.filter(f => f.holdings > 0);
     } else if (tab === 'sold') {
-      filtered = filtered.filter(f => f.shares === 0);
+      filtered = filtered.filter(f => f.holdings === 0);
     }
 
     if (keyword) {
+      const kw = keyword.toLowerCase();
       filtered = filtered.filter(f =>
-        f.name.includes(keyword) || f.code.includes(keyword)
+        f.name.toLowerCase().includes(kw) ||
+        (f.code && f.code.toLowerCase().includes(kw))
       );
     }
 
@@ -134,7 +131,9 @@ Page({
 
   viewFundDetail(e) {
     const id = e.currentTarget.dataset.id;
-    wx.showToast({ title: '查看详情开发中', icon: 'none' });
+    wx.navigateTo({
+      url: `/pages/asset-edit/asset-edit?id=${id}&type=FUND`
+    });
   },
 
   addFund() {

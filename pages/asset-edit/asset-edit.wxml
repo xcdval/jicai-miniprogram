@@ -2,211 +2,261 @@
   <!-- 状态栏 -->
   <view class="status-bar" style="height: {{statusBarHeight}}px;">
     <text class="status-time">9:41</text>
+    <text class="status-dots">●●●</text>
   </view>
 
   <!-- 导航栏 -->
   <view class="nav-bar" style="height: {{navBarHeight}}px;">
     <view class="nav-btn" bindtap="goBack">‹</view>
     <view class="nav-title">{{mode === 'edit' ? '编辑资产' : '添加资产'}}</view>
-    <view class="nav-btn-placeholder"></view>
+    <view class="nav-btn {{mode === 'edit' ? '' : 'invisible'}}" bindtap="goBack">完成</view>
   </view>
 
-  <!-- 资产类型切换 -->
-  <view class="asset-type-tabs" wx:if="{{mode === 'add'}}">
+  <!-- 资产类型切换 - 卡片式 -->
+  <view class="type-tabs-card" wx:if="{{mode === 'add'}}">
     <view class="type-tab {{assetType === 'FUND' ? 'active' : ''}}" data-type="FUND" bindtap="switchType">
-      <text class="type-icon">📊</text>
-      <text class="type-name">基金</text>
+      <view class="type-tab-icon">📊</view>
+      <view class="type-tab-content">
+        <view class="type-tab-name">基金</view>
+        <view class="type-tab-desc">股票型、债券型、指数基金</view>
+      </view>
+      <view class="type-tab-check" wx:if="{{assetType === 'FUND'}}">✓</view>
     </view>
     <view class="type-tab {{assetType === 'STOCK' ? 'active' : ''}}" data-type="STOCK" bindtap="switchType">
-      <text class="type-icon">📈</text>
-      <text class="type-name">股票</text>
+      <view class="type-tab-icon">📈</view>
+      <view class="type-tab-content">
+        <view class="type-tab-name">股票</view>
+        <view class="type-tab-desc">A股、港股、美股</view>
+      </view>
+      <view class="type-tab-check" wx:if="{{assetType === 'STOCK'}}">✓</view>
     </view>
     <view class="type-tab {{assetType === 'DEPOSIT' ? 'active' : ''}}" data-type="DEPOSIT" bindtap="switchType">
-      <text class="type-icon">💰</text>
-      <text class="type-name">存款</text>
-    </view>
-  </view>
-
-  <!-- 分组选择 -->
-  <view class="section-title">选择分组</view>
-  <view class="group-selector">
-    <view class="group-tag {{selectedGroupId === item.id ? 'active' : ''}}"
-          wx:for="{{groups}}"
-          wx:key="id"
-          data-id="{{item.id}}"
-          bindtap="selectGroup"
-          style="{{selectedGroupId === item.id ? 'background: ' + item.color : ''}}">
-      {{item.name}}
+      <view class="type-tab-icon">💰</view>
+      <view class="type-tab-content">
+        <view class="type-tab-name">存款</view>
+        <view class="type-tab-desc">定期、活期、大额存单</view>
+      </view>
+      <view class="type-tab-check" wx:if="{{assetType === 'DEPOSIT'}}">✓</view>
     </view>
   </view>
 
   <!-- 表单区域 -->
-  <view class="form-section">
-    <view class="section-title">基本信息</view>
-
-    <!-- 名称 -->
-    <view class="form-item">
-      <view class="form-label">
-        <text class="required">*</text>
-        <text>{{assetType === 'DEPOSIT' ? '存款名称' : '名称'}}</text>
+  <scroll-view scroll-y class="form-scroll">
+    <!-- 基本信息卡片 -->
+    <view class="form-card">
+      <view class="form-card-header">
+        <view class="form-card-icon">📋</view>
+        <view class="form-card-title">基本信息</view>
       </view>
-      <input class="form-input {{errors.name ? 'error' : ''}}"
-             type="text"
-             placeholder="{{assetType === 'FUND' ? '如：易方达蓝筹精选' : assetType === 'STOCK' ? '如：宁德时代' : '如：招商银行定期'}}"
-             data-field="name"
-             value="{{form.name}}"
-             bindinput="onInput"/>
-      <text class="error-msg" wx:if="{{errors.name}}">{{errors.name}}</text>
-    </view>
 
-    <!-- 代码（基金/股票） -->
-    <view class="form-item" wx:if="{{assetType !== 'DEPOSIT'}}">
-      <view class="form-label">
-        <text class="required">*</text>
-        <text>{{assetType === 'FUND' ? '基金代码' : '股票代码'}}</text>
-      </view>
-      <input class="form-input {{errors.code ? 'error' : ''}}"
-             type="text"
-             placeholder="{{assetType === 'FUND' ? '如：005827' : '如：300750'}}"
-             data-field="code"
-             value="{{form.code}}"
-             bindinput="onInput"/>
-      <text class="error-msg" wx:if="{{errors.code}}">{{errors.code}}</text>
-    </view>
-
-    <!-- 平台/券商/银行 -->
-    <view class="form-item">
-      <view class="form-label">
-        <text class="required">*</text>
-        <text>{{assetType === 'DEPOSIT' ? '银行名称' : '购买平台/券商'}}</text>
-      </view>
-      <input class="form-input {{errors.platform ? 'error' : ''}}"
-             type="text"
-             placeholder="{{assetType === 'DEPOSIT' ? '如：招商银行' : assetType === 'FUND' ? '如：支付宝、天天基金' : '如：华泰证券、东方财富'}}"
-             data-field="platform"
-             value="{{form.platform}}"
-             bindinput="onInput"/>
-      <text class="error-msg" wx:if="{{errors.platform}}">{{errors.platform}}</text>
-    </view>
-  </view>
-
-  <!-- 投资信息（基金/股票） -->
-  <view class="form-section" wx:if="{{assetType !== 'DEPOSIT'}}">
-    <view class="section-title">投资信息</view>
-
-    <view class="form-row">
-      <view class="form-item half">
+      <!-- 名称 -->
+      <view class="form-item">
         <view class="form-label">
           <text class="required">*</text>
-          <text>成本价</text>
+          <text>{{assetType === 'DEPOSIT' ? '存款名称' : '资产名称'}}</text>
         </view>
-        <input class="form-input {{errors.costPrice ? 'error' : ''}}"
+        <input class="form-input {{errors.name ? 'error' : ''}}"
+               type="text"
+               placeholder="{{assetType === 'FUND' ? '如：易方达蓝筹精选' : assetType === 'STOCK' ? '如：宁德时代' : '如：招商银行定期'}}"
+               data-field="name"
+               value="{{form.name}}"
+               bindinput="onInput"/>
+        <text class="error-msg" wx:if="{{errors.name}}">{{errors.name}}</text>
+      </view>
+
+      <!-- 代码 -->
+      <view class="form-item" wx:if="{{assetType !== 'DEPOSIT'}}">
+        <view class="form-label">
+          <text class="required">*</text>
+          <text>{{assetType === 'FUND' ? '基金代码' : '股票代码'}}</text>
+        </view>
+        <input class="form-input {{errors.code ? 'error' : ''}}"
+               type="text"
+               placeholder="{{assetType === 'FUND' ? '如：005827' : '如：300750'}}"
+               data-field="code"
+               value="{{form.code}}"
+               bindinput="onInput"/>
+        <text class="error-msg" wx:if="{{errors.code}}">{{errors.code}}</text>
+      </view>
+
+      <!-- 平台 -->
+      <view class="form-item">
+        <view class="form-label">
+          <text class="required">*</text>
+          <text>{{assetType === 'DEPOSIT' ? '银行名称' : assetType === 'FUND' ? '购买平台' : '券商'}}</text>
+        </view>
+        <input class="form-input {{errors.platform ? 'error' : ''}}"
+               type="text"
+               placeholder="{{assetType === 'FUND' ? '如：支付宝、天天基金' : assetType === 'STOCK' ? '如：华泰、东方财富' : '如：招商银行'}}"
+               data-field="platform"
+               value="{{form.platform}}"
+               bindinput="onInput"/>
+        <text class="error-msg" wx:if="{{errors.platform}}">{{errors.platform}}</text>
+      </view>
+    </view>
+
+    <!-- 分组选择 -->
+    <view class="form-card">
+      <view class="form-card-header">
+        <view class="form-card-icon">🏷️</view>
+        <view class="form-card-title">选择分组</view>
+      </view>
+      <view class="group-tags">
+        <view class="group-tag {{selectedGroupId === item.id ? 'active' : ''}}"
+              wx:for="{{groups}}"
+              wx:key="id"
+              data-id="{{item.id}}"
+              bindtap="selectGroup"
+              style="{{selectedGroupId === item.id ? 'background: ' + item.color + '; border-color: ' + item.color : ''}}">
+          <text class="group-dot" wx:if="{{selectedGroupId === item.id}}"></text>
+          {{item.name}}
+        </view>
+      </view>
+    </view>
+
+    <!-- 投资信息卡片 -->
+    <view class="form-card" wx:if="{{assetType !== 'DEPOSIT'}}">
+      <view class="form-card-header">
+        <view class="form-card-icon">💹</view>
+        <view class="form-card-title">投资信息</view>
+      </view>
+
+      <view class="form-row">
+        <view class="form-item half">
+          <view class="form-label">
+            <text class="required">*</text>
+            <text>成本价</text>
+          </view>
+          <input class="form-input {{errors.costPrice ? 'error' : ''}}"
+                 type="digit"
+                 placeholder="0.00"
+                 data-field="costPrice"
+                 value="{{form.costPrice}}"
+                 bindinput="onInput"/>
+          <text class="error-msg" wx:if="{{errors.costPrice}}">{{errors.costPrice}}</text>
+        </view>
+
+        <view class="form-item half">
+          <view class="form-label">
+            <text class="required">*</text>
+            <text>{{assetType === 'FUND' ? '持有份额' : '持股数量'}}</text>
+          </view>
+          <input class="form-input {{errors.shares ? 'error' : ''}}"
+                 type="digit"
+                 placeholder="0"
+                 data-field="shares"
+                 value="{{form.shares}}"
+                 bindinput="onInput"/>
+          <text class="error-msg" wx:if="{{errors.shares}}">{{errors.shares}}</text>
+        </view>
+      </view>
+
+      <view class="form-item">
+        <view class="form-label-row">
+          <text class="form-label">当前净值/价格</text>
+          <text class="form-label-hint">选填</text>
+        </view>
+        <input class="form-input"
+               type="digit"
+               placeholder="留空则使用成本价计算"
+               data-field="currentPrice"
+               value="{{form.currentPrice}}"
+               bindinput="onInput"/>
+        <view class="form-tip-row">
+          <text class="form-tip-icon">💡</text>
+          <text class="form-tip">填写后可在资产页面查看实时盈亏</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 存款信息卡片 -->
+    <view class="form-card" wx:if="{{assetType === 'DEPOSIT'}}">
+      <view class="form-card-header">
+        <view class="form-card-icon">🏦</view>
+        <view class="form-card-title">存款信息</view>
+      </view>
+
+      <view class="form-item">
+        <view class="form-label">
+          <text class="required">*</text>
+          <text>存款金额</text>
+        </view>
+        <input class="form-input {{errors.amount ? 'error' : ''}}"
                type="digit"
                placeholder="0.00"
-               data-field="costPrice"
-               value="{{form.costPrice}}"
+               data-field="amount"
+               value="{{form.amount}}"
                bindinput="onInput"/>
-        <text class="error-msg" wx:if="{{errors.costPrice}}">{{errors.costPrice}}</text>
+        <text class="error-msg" wx:if="{{errors.amount}}">{{errors.amount}}</text>
       </view>
 
-      <view class="form-item half">
-        <view class="form-label">
-          <text class="required">*</text>
-          <text>{{assetType === 'FUND' ? '持有份额' : '持股数量'}}</text>
+      <view class="form-item">
+        <view class="form-label-row">
+          <text class="form-label">年利率（%）</text>
+          <text class="form-label-hint">选填</text>
         </view>
-        <input class="form-input {{errors.shares ? 'error' : ''}}"
+        <input class="form-input {{errors.annualRate ? 'error' : ''}}"
                type="digit"
-               placeholder="0"
-               data-field="shares"
-               value="{{form.shares}}"
+               placeholder="如：2.85"
+               data-field="annualRate"
+               value="{{form.annualRate}}"
                bindinput="onInput"/>
-        <text class="error-msg" wx:if="{{errors.shares}}">{{errors.shares}}</text>
+        <text class="error-msg" wx:if="{{errors.annualRate}}">{{errors.annualRate}}</text>
       </view>
-    </view>
 
-    <view class="form-item">
-      <view class="form-label">当前净值/价格（选填）</view>
-      <input class="form-input"
-             type="digit"
-             placeholder="留空则使用成本价"
-             data-field="currentPrice"
-             value="{{form.currentPrice}}"
-             bindinput="onInput"/>
-      <text class="form-tip">填写后可计算当前盈亏</text>
-    </view>
-  </view>
-
-  <!-- 存款信息 -->
-  <view class="form-section" wx:if="{{assetType === 'DEPOSIT'}}">
-    <view class="section-title">存款信息</view>
-
-    <view class="form-item">
-      <view class="form-label">
-        <text class="required">*</text>
-        <text>存款金额</text>
-      </view>
-      <input class="form-input {{errors.amount ? 'error' : ''}}"
-             type="digit"
-             placeholder="0.00"
-             data-field="amount"
-             value="{{form.amount}}"
-             bindinput="onInput"/>
-      <text class="error-msg" wx:if="{{errors.amount}}">{{errors.amount}}</text>
-    </view>
-
-    <view class="form-item">
-      <view class="form-label">年利率（%）</view>
-      <input class="form-input {{errors.annualRate ? 'error' : ''}}"
-             type="digit"
-             placeholder="如：2.85"
-             data-field="annualRate"
-             value="{{form.annualRate}}"
-             bindinput="onInput"/>
-      <text class="error-msg" wx:if="{{errors.annualRate}}">{{errors.annualRate}}</text>
-    </view>
-
-    <view class="form-row">
-      <view class="form-item half">
-        <view class="form-label">起息日</view>
-        <picker mode="date" value="{{form.startDate}}" data-field="startDate" bindchange="onInput">
-          <view class="form-picker {{form.startDate ? '' : 'placeholder'}}">
-            {{form.startDate || '请选择日期'}}
+      <view class="form-row">
+        <view class="form-item half">
+          <view class="form-label">
+            <text>起息日</text>
           </view>
-        </picker>
-      </view>
+          <picker mode="date" value="{{form.startDate}}" data-field="startDate" bindchange="onInput">
+            <view class="form-picker {{form.startDate ? '' : 'placeholder'}}">
+              <text>{{form.startDate || '请选择'}}</text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
 
-      <view class="form-item half">
-        <view class="form-label">到期日</view>
-        <picker mode="date" value="{{form.endDate}}" data-field="endDate" bindchange="onInput">
-          <view class="form-picker {{form.endDate ? '' : 'placeholder'}}">
-            {{form.endDate || '请选择日期'}}
+        <view class="form-item half">
+          <view class="form-label">
+            <text>到期日</text>
           </view>
-        </picker>
+          <picker mode="date" value="{{form.endDate}}" data-field="endDate" bindchange="onInput">
+            <view class="form-picker {{form.endDate ? '' : 'placeholder'}}">
+              <text>{{form.endDate || '请选择'}}</text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
       </view>
     </view>
-  </view>
 
-  <!-- 备注 -->
-  <view class="form-section">
-    <view class="form-item">
-      <view class="form-label">备注</view>
+    <!-- 备注卡片 -->
+    <view class="form-card">
+      <view class="form-card-header">
+        <view class="form-card-icon">📝</view>
+        <view class="form-card-title">备注</view>
+        <text class="form-card-optional">选填</text>
+      </view>
       <textarea class="form-textarea"
-                placeholder="添加备注信息..."
+                placeholder="添加备注信息，如购买理由、预期收益..."
                 data-field="remark"
                 value="{{form.remark}}"
                 bindinput="onInput"
                 maxlength="200"/>
+      <view class="textarea-count">{{form.remark.length || 0}}/200</view>
     </view>
-  </view>
+  </scroll-view>
 
   <!-- 底部按钮 -->
   <view class="form-footer">
     <button class="btn btn-primary" bindtap="saveAsset">
-      {{mode === 'edit' ? '保存修改' : '添加资产'}}
+      <text class="btn-icon">✓</text>
+      {{mode === 'edit' ? '保存修改' : '确认添加'}}
     </button>
-    <button class="btn btn-secondary" bindtap="goBack">取消</button>
+    <view class="btn-cancel" bindtap="goBack">取消</view>
+    <view class="btn-delete" wx:if="{{mode === 'edit'}}" bindtap="deleteAsset">删除资产</view>
   </view>
 
-  <!-- 底部安全区域 -->
   <view class="safe-area-bottom"></view>
 </view>

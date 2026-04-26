@@ -4,12 +4,13 @@
  */
 
 const assetService = require('../../services/assetService');
+const ocrService = require('../../services/ocrService');
 
 Page({
   data: {
     statusBarHeight: 44,
     navBarHeight: 44,
-    // 步骤: 'upload' 上传, 'preview' 预览, 'edit' 编辑
+    // 步骤: 'upload' 上传, 'preview' 预览, 'edit' 编辑, 'manual' 手动输入
     step: 'upload',
     // 图片信息
     imagePath: '',
@@ -17,6 +18,16 @@ Page({
     imageHeight: 0,
     // 识别结果
     recognizedAssets: [],
+    // OCR 原始文本
+    rawOCRText: '',
+    // OCR 置信度
+    ocrConfidence: 0,
+    ocrConfidencePercent: 0,
+    ocrConfidenceClass: 'low',
+    // 手动输入文本
+    manualText: '',
+    // 是否演示模式
+    isDemo: false,
     // 平台类型
     platformType: '',
     supportedPlatforms: [
@@ -111,46 +122,149 @@ Page({
     }, 300);
   },
 
-  // 执行OCR识别（模拟）
+  // 执行OCR识别
   performOCR() {
-    const { selectedPlatform } = this.data;
+    const { selectedPlatform, imagePath } = this.data;
 
-    // 根据不同平台返回模拟识别结果
-    const mockResults = this.getMockOCRResults(selectedPlatform);
+    this.setData({ isProcessing: true, progress: 0 });
+
+    // 模拟识别进度（实际调用API时也显示进度）
+    const progressInterval = setInterval(() => {
+      const progress = this.data.progress + Math.random() * 15;
+      if (progress >= 90) {
+        clearInterval(progressInterval);
+        this.setData({ progress: 90 });
+        // 开始真实识别
+        this.doRealOCR(imagePath, selectedPlatform);
+      } else {
+        this.setData({ progress: Math.min(progress, 85) });
+      }
+    }, 200);
+  },
+
+  // 执行真实 OCR 识别
+  doRealOCR(imagePath, platform) {
+    ocrService.recognize(imagePath, platform)
+      .then(result => {
+        var confidence = result.confidence || 0;
+        var confidencePercent = Math.round(confidence * 100);
+        var confidenceClass = confidence >= 0.8 ? 'high' : (confidence >= 0.5 ? 'medium' : 'low');
+
+        this.setData({
+          isProcessing: false,
+          progress: 100,
+          recognizedAssets: result.assets || [],
+          rawOCRText: result.rawText || '',
+          ocrConfidence: confidence,
+          ocrConfidencePercent: confidencePercent,
+          ocrConfidenceClass: confidenceClass,
+          isDemo: result.isDemo || false,
+          step: result.needsManualInput ? 'manual' : (result.assets && result.assets.length > 0 ? 'edit' : 'manual'),
+          platformType: platform
+        });
+
+        if (result.needsManualInput) {
+          wx.showModal({
+            title: '请手动输入',
+            content: '无法从截图识别到资产信息，请在下方手动输入文本或粘贴持仓信息',
+            showCancel: false,
+            confirmText: '知道了'
+          });
+        } else if (result.assets && result.assets.length > 0) {
+          wx.showToast({
+            title: `识别到${result.assets.length}条资产，请核对`,
+            icon: 'success',
+            duration: 2000
+          });
+        }
+      })
+      .catch(err => {
+        console.error('OCR 识别失败:', err);
+        this.setData({
+          isProcessing: false,
+          progress: 100,
+          step: 'manual'
+        });
+        wx.showModal({
+          title: '识别失败',
+          content: '请手动输入资产信息，或重新上传更清晰的截图',
+          showCancel: true,
+          cancelText: '重新上传',
+          confirmText: '手动输入',
+          success: res => {
+            if (!res.confirm) {
+              this.setData({ step: 'upload', imagePath: '', recognizedAssets: [] });
+            }
+          }
+        });
+      });
+  },
+
+  // 提交手动输入的文本
+  submitManualText() {
+    const { manualText, selectedPlatform } = this.data;
+    if (!manualText || !manualText.trim()) {
+      wx.showToast({ title: '请输入资产信息', icon: 'none' });
+      return;
+    }
+
+    this.setData({ isProcessing: true });
+
+    // 使用文本解析器解析粘贴的文本
+    const result = ocrService.recognizeText(manualText, selectedPlatform);
+
+    var confidence = result.confidence || 0;
+    var confidencePercent = Math.round(confidence * 100);
+    var confidenceClass = confidence >= 0.8 ? 'high' : (confidence >= 0.5 ? 'medium' : 'low');
 
     this.setData({
       isProcessing: false,
-      step: 'edit',
-      recognizedAssets: mockResults,
-      platformType: selectedPlatform
+      recognizedAssets: result.assets || [],
+      rawOCRText: manualText,
+      ocrConfidence: confidence,
+      ocrConfidencePercent: confidencePercent,
+      ocrConfidenceClass: confidenceClass,
+      isDemo: false,
+      step: result.assets && result.assets.length > 0 ? 'edit' : 'manual'
     });
 
-    wx.showToast({
-      title: `识别到${mockResults.length}条资产`,
-      icon: 'success'
-    });
+    if (result.assets && result.assets.length > 0) {
+      wx.showToast({ title: `解析到${result.assets.length}条资产`, icon: 'success' });
+    } else {
+      wx.showToast({ title: '未能解析到资产信息', icon: 'none' });
+    }
   },
 
-  // 获取模拟OCR识别结果
+  // 手动输入文本变化
+  onManualTextInput(e) {
+    this.setData({ manualText: e.detail.value });
+  },
+
+  // 切换到手动输入模式
+  switchToManual() {
+    this.setData({ step: 'manual', manualText: '' });
+  },
+
+  // 获取演示模式识别结果（isDemo 标记供 UI 显示）
   getMockOCRResults(platform) {
     const results = {
       alipay: [
-        { name: '易方达蓝筹精选混合', code: '005827', type: 'FUND', costPrice: 2.456, shares: 5000, platform: '支付宝' },
-        { name: '招商中证白酒指数', code: '161725', type: 'FUND', costPrice: 1.234, shares: 8000, platform: '支付宝' }
+        { name: '易方达蓝筹精选混合', code: '005827', type: 'FUND', costPrice: 2.456, shares: 5000, platform: '支付宝', _confidence: 0.95 },
+        { name: '招商中证白酒指数', code: '161725', type: 'FUND', costPrice: 1.234, shares: 8000, platform: '支付宝', _confidence: 0.95 }
       ],
       ttjj: [
-        { name: '华夏能源革新股票', code: '003834', type: 'FUND', costPrice: 3.567, shares: 3000, platform: '天天基金' },
-        { name: '中欧医疗健康混合', code: '003095', type: 'FUND', costPrice: 2.891, shares: 2000, platform: '天天基金' }
+        { name: '华夏能源革新股票', code: '003834', type: 'FUND', costPrice: 3.567, shares: 3000, platform: '天天基金', _confidence: 0.9 },
+        { name: '中欧医疗健康混合', code: '003095', type: 'FUND', costPrice: 2.891, shares: 2000, platform: '天天基金', _confidence: 0.9 }
       ],
       eastmoney: [
-        { name: '宁德时代', code: '300750', type: 'STOCK', costPrice: 198.5, shares: 100, platform: '东方财富' },
-        { name: '贵州茅台', code: '600519', type: 'STOCK', costPrice: 1520, shares: 50, platform: '东方财富' }
+        { name: '宁德时代', code: '300750', type: 'STOCK', costPrice: 198.5, shares: 100, platform: '东方财富', _confidence: 0.9 },
+        { name: '贵州茅台', code: '600519', type: 'STOCK', costPrice: 1520, shares: 50, platform: '东方财富', _confidence: 0.9 }
       ],
       wechat: [
-        { name: '广发科技先锋混合', code: '008903', type: 'FUND', costPrice: 1.856, shares: 4000, platform: '微信理财通' }
+        { name: '广发科技先锋混合', code: '008903', type: 'FUND', costPrice: 1.856, shares: 4000, platform: '微信理财通', _confidence: 0.9 }
       ],
       other: [
-        { name: '工商银行定期', code: '', type: 'DEPOSIT', amount: 50000, annualRate: 2.85, platform: '工商银行' }
+        { name: '工商银行定期', code: '', type: 'DEPOSIT', amount: 50000, annualRate: 2.85, platform: '工商银行', _confidence: 0.85 }
       ]
     };
 
@@ -239,16 +353,18 @@ Page({
         let successCount = 0;
 
         recognizedAssets.forEach(asset => {
-          const result = assetService.addAsset(groupId, {
+          // 过滤掉内部字段
+          var cleanAsset = {
             type: asset.type,
             name: asset.name,
-            code: asset.code,
-            costPrice: asset.costPrice,
-            shares: asset.shares,
-            amount: asset.amount,
-            annualRate: asset.annualRate,
-            platform: asset.platform
-          });
+            code: asset.code || '',
+            costPrice: asset.costPrice || 0,
+            shares: asset.shares || 0,
+            amount: asset.amount || 0,
+            annualRate: asset.annualRate || 0,
+            platform: asset.platform || ''
+          };
+          const result = assetService.addAsset(groupId, cleanAsset);
 
           if (result.success) {
             successCount++;
@@ -273,6 +389,12 @@ Page({
       step: 'upload',
       imagePath: '',
       recognizedAssets: [],
+      rawOCRText: '',
+      ocrConfidence: 0,
+      ocrConfidencePercent: 0,
+      ocrConfidenceClass: 'low',
+      isDemo: false,
+      manualText: '',
       isProcessing: false,
       progress: 0
     });

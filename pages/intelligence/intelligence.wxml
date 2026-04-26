@@ -1,7 +1,7 @@
 <view class="container">
   <!-- 状态栏 -->
   <view class="status-bar" style="height: {{statusBarHeight}}px;">
-    <text class="status-time">9:41</text>
+    <text class="status-time">{{lastUpdate}}</text>
     <text class="status-dots">●●●</text>
   </view>
 
@@ -9,7 +9,14 @@
   <view class="nav-bar" style="height: {{navBarHeight}}px;">
     <view class="nav-btn" style="visibility: hidden;">‹</view>
     <view class="nav-title">市场情报</view>
-    <view class="nav-btn" bindtap="refreshData">↻</view>
+    <view class="nav-btn refresh-btn {{isRefreshing ? 'refreshing' : ''}}" bindtap="onRefreshTap">
+      <text class="refresh-icon">↻</text>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{isLoading}}" class="loading-overlay">
+    <text>加载中...</text>
   </view>
 
   <!-- 时段切换标签 -->
@@ -47,29 +54,61 @@
         <view class="ai-badge">AI 智能决策</view>
         <view class="ai-update-time">基于多维度数据分析</view>
       </view>
-      <view class="ai-conclusion">
-        今日市场情绪偏乐观，降准释放流动性利好，建议逢低布局新能源与AI算力板块，仓位控制在60-70%
-      </view>
+      <view class="ai-conclusion">{{aiData.conclusion}}</view>
       <view class="ai-signals">
         <view class="signal-item">
           <view class="signal-label">大盘方向</view>
-          <view class="signal-value signal-buy">看多 ↑</view>
+          <view class="signal-value {{aiData.direction === '看多' ? 'signal-buy' : aiData.direction === '看空' ? 'signal-sell' : 'signal-hold'}}">{{aiData.direction}} {{aiData.direction === '看多' ? '↑' : aiData.direction === '看空' ? '↓' : '→'}}</view>
         </view>
         <view class="signal-item">
           <view class="signal-label">操作建议</view>
-          <view class="signal-value signal-hold">逢低买入</view>
+          <view class="signal-value signal-hold">{{aiData.suggestion}}</view>
         </view>
         <view class="signal-item">
           <view class="signal-label">目标仓位</view>
-          <view class="signal-value">60-70%</view>
+          <view class="signal-value">{{aiData.targetPosition}}</view>
+        </view>
+      </view>
+      <view class="ai-risk-warning" wx:if="{{aiData.riskWarning}}">
+        <text class="risk-icon">⚠️</text>
+        <text class="risk-text">{{aiData.riskWarning}}</text>
+      </view>
+      <view class="ai-key-levels" wx:if="{{aiData.keyLevels}}">
+        <view class="level-item">
+          <text class="level-label">支撑位</text>
+          <text class="level-value support">{{aiData.keyLevels.support || '--'}}</text>
+        </view>
+        <view class="level-item">
+          <text class="level-label">压力位</text>
+          <text class="level-value resistance">{{aiData.keyLevels.resistance || '--'}}</text>
         </view>
       </view>
       <view class="ai-checklist">
         <view class="checklist-title">📋 操作 checklist</view>
-        <view class="checklist-item checked">关注北向资金流向</view>
-        <view class="checklist-item checked">监控成交量变化</view>
-        <view class="checklist-item">观察3300点支撑位</view>
-        <view class="checklist-item">止盈涨幅超5%个股</view>
+        <view class="checklist-item {{item.done ? 'checked' : ''}}" wx:for="{{aiData.checklist}}" wx:key="text">{{item.text}}</view>
+      </view>
+    </view>
+
+    <!-- 行业板块涨幅榜 -->
+    <view class="sector-performance-card" wx:if="{{sectorPerformance.industrySectors.length > 0}}">
+      <view class="sector-card-header">
+        <text class="sector-card-title">📈 行业板块涨幅榜</text>
+      </view>
+      <view class="sector-list">
+        <view class="sector-item" wx:for="{{sectorPerformance.industrySectors}}" wx:key="code">
+          <text class="sector-name">{{item.name}}</text>
+          <text class="sector-change {{item.changePercent >= 0 ? 'up' : 'down'}}">{{item.changePercent >= 0 ? '+' : ''}}{{item.changePercent}}%</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- AI推荐关注板块 -->
+    <view class="hot-sectors-card" wx:if="{{aiData.hotSectors && aiData.hotSectors.length > 0}}">
+      <view class="hot-card-header">
+        <text class="hot-card-title">🔥 AI推荐关注板块</text>
+      </view>
+      <view class="hot-tags">
+        <view class="hot-tag" wx:for="{{aiData.hotSectors}}" wx:key="index">{{item}}</view>
       </view>
     </view>
 
@@ -80,35 +119,10 @@
         <text class="card-update-time">实时更新</text>
       </view>
       <view class="global-markets">
-        <view class="market-mini">
-          <view class="market-name">道琼斯</view>
-          <view class="market-index">38,567.52</view>
-          <view class="market-change-mini rise">+0.56% ↑</view>
-        </view>
-        <view class="market-mini">
-          <view class="market-name">纳斯达克</view>
-          <view class="market-index">15,888.32</view>
-          <view class="market-change-mini rise">+1.24% ↑</view>
-        </view>
-        <view class="market-mini">
-          <view class="market-name">标普500</view>
-          <view class="market-index">5,026.12</view>
-          <view class="market-change-mini rise">+0.89% ↑</view>
-        </view>
-        <view class="market-mini">
-          <view class="market-name">恒生指数</view>
-          <view class="market-index">16,789.45</view>
-          <view class="market-change-mini fall">-0.32% ↓</view>
-        </view>
-        <view class="market-mini">
-          <view class="market-name">富时A50</view>
-          <view class="market-index">11,892.35</view>
-          <view class="market-change-mini rise">+0.45% ↑</view>
-        </view>
-        <view class="market-mini">
-          <view class="market-name">日经225</view>
-          <view class="market-index">38,456.12</view>
-          <view class="market-change-mini rise">+0.78% ↑</view>
+        <view class="market-mini" wx:for="{{globalIndices}}" wx:key="code">
+          <view class="market-name">{{item.name}}</view>
+          <view class="market-index">{{item.current}}</view>
+          <view class="market-change-mini {{item.changePercent >= 0 ? 'rise' : 'fall'}}">{{item.changePercent}}%</view>
         </view>
       </view>
       <view class="data-sources">
@@ -122,10 +136,10 @@
     <view class="sentiment-gauge">
       <view class="gauge-header">
         <view class="gauge-title">📊 市场情绪指数</view>
-        <view class="gauge-value gauge-greed">72 - 贪婪</view>
+        <view class="gauge-value {{sentiment.value >= 60 ? 'gauge-greed' : 'gauge-fear'}}">{{sentiment.value}} - {{sentiment.level}}</view>
       </view>
       <view class="gauge-bar">
-        <view class="gauge-marker" style="left: 72%;"></view>
+        <view class="gauge-marker" style="left: {{sentiment.value}}%;"></view>
       </view>
       <view class="gauge-labels">
         <text>极度恐惧</text>
@@ -136,20 +150,20 @@
       </view>
       <view class="sentiment-factors">
         <view class="factor-item">
-          <text class="factor-name">波动率</text>
-          <text class="factor-value fall">-12% ↓</text>
+          <text class="factor-name">VIX波动率</text>
+          <text class="factor-value {{sentiment.factors.volatility > 20 ? 'fall' : 'rise'}}">{{sentiment.factors.volatility}}</text>
+        </view>
+        <view class="factor-item">
+          <text class="factor-name">恐惧贪婪</text>
+          <text class="factor-value rise">{{sentiment.factors.fearGreed}}</text>
         </view>
         <view class="factor-item">
           <text class="factor-name">涨跌比</text>
-          <text class="factor-value rise">2.8 ↑</text>
-        </view>
-        <view class="factor-item">
-          <text class="factor-name">北向资金</text>
-          <text class="factor-value rise">+86.5亿 ↑</text>
+          <text class="factor-value rise">{{sentiment.factors.advanceDecline}}</text>
         </view>
         <view class="factor-item">
           <text class="factor-name">期权PCR</text>
-          <text class="factor-value rise">0.82 ↑</text>
+          <text class="factor-value rise">{{sentiment.factors.pcr}}</text>
         </view>
       </view>
     </view>
@@ -160,20 +174,16 @@
         <view class="live-dot"></view>
         <text class="live-text">实时快讯</text>
       </view>
-      <view class="flash-countdown">
-        <text>距开盘</text>
-        <text class="countdown-time">00:42:18</text>
-      </view>
     </view>
 
     <!-- 置顶重要信息 -->
-    <view class="flash-pin">
+    <view class="flash-pin" wx:for="{{newsFlash}}" wx:key="id" wx:if="{{item.isPin && index < 2}}">
       <view class="pin-tag">置顶</view>
       <view class="pin-content">
-        <view class="pin-title">央行超预期降准0.5个百分点，释放流动性约1万亿</view>
+        <view class="pin-title">{{item.title}}</view>
         <view class="pin-meta">
-          <text class="tag tag-policy">政策</text>
-          <text class="time">07:32</text>
+          <text class="tag tag-{{item.category}}">{{item.category}}</text>
+          <text class="time">{{item.time}}</text>
         </view>
       </view>
     </view>
@@ -187,19 +197,19 @@
       <view class="flow-grid">
         <view class="flow-item">
           <view class="flow-label">北向资金</view>
-          <view class="flow-amount flow-in">+86.5亿 ↑</view>
+          <view class="flow-amount {{fundFlow.northFlow >= 0 ? 'flow-in' : 'flow-out'}}">{{fundFlow.northFlow >= 0 ? '+' : ''}}{{fundFlow.northFlow}}亿</view>
         </view>
         <view class="flow-item">
           <view class="flow-label">主力资金</view>
-          <view class="flow-amount flow-in">+52.3亿 ↑</view>
+          <view class="flow-amount {{fundFlow.mainFlow >= 0 ? 'flow-in' : 'flow-out'}}">{{fundFlow.mainFlow >= 0 ? '+' : ''}}{{fundFlow.mainFlow}}亿</view>
         </view>
         <view class="flow-item">
           <view class="flow-label">散户资金</view>
-          <view class="flow-amount flow-out">-28.7亿 ↓</view>
+          <view class="flow-amount {{fundFlow.retailFlow >= 0 ? 'flow-in' : 'flow-out'}}">{{fundFlow.retailFlow >= 0 ? '+' : ''}}{{fundFlow.retailFlow}}亿</view>
         </view>
         <view class="flow-item">
           <view class="flow-label">融资余额</view>
-          <view class="flow-amount flow-in">+125.6亿 ↑</view>
+          <view class="flow-amount {{fundFlow.marginBalance >= 0 ? 'flow-in' : 'flow-out'}}">{{fundFlow.marginBalance >= 0 ? '+' : ''}}{{fundFlow.marginBalance}}亿</view>
         </view>
       </view>
     </view>
@@ -233,19 +243,15 @@
         <view class="live-dot"></view>
         <text class="live-text">盘中快讯</text>
       </view>
-      <view class="flash-countdown">
-        <text>距收盘</text>
-        <text class="countdown-time">02:18:42</text>
-      </view>
     </view>
 
-    <view class="flash-pin">
+    <view class="flash-pin" wx:for="{{newsFlash}}" wx:key="id" wx:if="{{item.isPin}}">
       <view class="pin-tag">重要</view>
       <view class="pin-content">
-        <view class="pin-title">市场情绪指数升至72点，进入贪婪区间，光伏板块领涨</view>
+        <view class="pin-title">{{item.title}}</view>
         <view class="pin-meta">
-          <text class="tag tag-market">市场</text>
-          <text class="time">11:45</text>
+          <text class="tag tag-{{item.category}}">{{item.category}}</text>
+          <text class="time">{{item.time}}</text>
         </view>
       </view>
     </view>
@@ -256,61 +262,163 @@
 
   <!-- 盘后复盘内容 -->
   <view wx:if="{{activePhase === 'closing'}}">
-    <view class="flash-header">
-      <view class="flash-live-indicator">
-        <view class="live-dot" style="background: #10b981;"></view>
-        <text class="live-text">盘后复盘</text>
-      </view>
-      <view class="flash-countdown">
-        <text>今日收盘</text>
-        <text class="countdown-time">已收盘</text>
+    <!-- 收盘时间提示 -->
+    <view class="closing-header">
+      <view class="closing-time-badge">
+        <text class="closing-icon">📊</text>
+        <text class="closing-text">收盘复盘 · {{lastUpdate}}</text>
       </view>
     </view>
 
+    <!-- 指数一览 -->
+    <view class="closing-indices-card">
+      <view class="indices-grid">
+        <view class="index-item" wx:for="{{chinaIndices}}" wx:key="code">
+          <view class="index-name">{{item.name}}</view>
+          <view class="index-price {{item.changePercent >= 0 ? 'rise' : 'fall'}}">
+            {{item.current > 0 ? item.current.toLocaleString() : '--'}}
+          </view>
+          <view class="index-change {{item.changePercent >= 0 ? 'rise' : 'fall'}}">
+            {{item.changePercent >= 0 ? '+' : ''}}{{item.changePercent}}%
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 今日概况 -->
     <view class="closing-summary-card">
-      <view class="summary-title">📈 今日市场总结</view>
-      <view class="summary-content">
-        <view class="summary-item">
-          <text class="summary-label">上证指数</text>
-          <text class="summary-value rise">3,245.68 +0.54%</text>
+      <view class="summary-header">
+        <text class="summary-title">📈 今日概况</text>
+      </view>
+      <view class="summary-grid">
+        <view class="summary-col">
+          <view class="summary-label">上涨</view>
+          <view class="summary-value rise">{{upCount}}只</view>
         </view>
-        <view class="summary-item">
-          <text class="summary-label">深证成指</text>
-          <text class="summary-value rise">10,456.32 +0.78%</text>
+        <view class="summary-divider"></view>
+        <view class="summary-col">
+          <view class="summary-label">下跌</view>
+          <view class="summary-value fall">{{downCount}}只</view>
         </view>
-        <view class="summary-item">
-          <text class="summary-label">创业板指</text>
-          <text class="summary-value rise">2,156.88 +1.12%</text>
+        <view class="summary-divider"></view>
+        <view class="summary-col">
+          <view class="summary-label">涨跌比</view>
+          <view class="summary-value {{upDownRatio >= 50 ? 'rise' : 'fall'}}">{{upDownRatio}}%</view>
         </view>
-        <view class="summary-item">
-          <text class="summary-label">成交额</text>
-          <text class="summary-value">8,956亿</text>
+      </view>
+      <view class="volume-row" wx:if="{{totalVolumeFormatted}}">
+        <text class="volume-label">成交额</text>
+        <text class="volume-value">{{totalVolumeFormatted}}</text>
+      </view>
+      <!-- 涨跌分布条 -->
+      <view class="updown-bar-container">
+        <view class="updown-bar">
+          <view class="updown-up" style="width: {{upDownRatio}}%;"></view>
+          <view class="updown-down" style="width: {{100 - upDownRatio}}%;"></view>
         </view>
       </view>
     </view>
 
-    <view class="section-title">涨跌分布</view>
-    <view class="up-down-stats">
-      <view class="up-down-bar">
-        <view class="up-segment" style="width: 65%;"></view>
-        <view class="down-segment" style="width: 35%;"></view>
+    <!-- 市场情绪 -->
+    <view class="sentiment-summary-card">
+      <view class="sentiment-header">
+        <text class="sentiment-title">🎯 今日情绪</text>
+        <view class="sentiment-badge {{sentiment.value >= 50 ? 'greed' : 'fear'}}">
+          {{sentiment.level}}
+        </view>
       </view>
-      <view class="up-down-labels">
-        <text class="up-label">上涨 3256只</text>
-        <text class="down-label">下跌 1568只</text>
+      <view class="sentiment-meter">
+        <view class="meter-bar">
+          <view class="meter-fill {{sentiment.value >= 50 ? 'greed' : 'fear'}}" style="width: {{sentiment.value}}%;"></view>
+          <view class="meter-pointer" style="left: {{sentiment.value}}%;"></view>
+        </view>
+      </view>
+      <view class="sentiment-factors-row">
+        <view class="factor-badge">
+          <text>VIX {{sentiment.factors.volatility || '--'}}</text>
+        </view>
+        <view class="factor-badge">
+          <text>恐惧贪婪 {{sentiment.factors.fearGreed || '--'}}</text>
+        </view>
+        <view class="factor-badge">
+          <text>涨跌比 {{sentiment.factors.advanceDecline || '--'}}</text>
+        </view>
       </view>
     </view>
 
-    <view class="section-title">龙虎榜</view>
-    <view class="dragon-tiger-list">
-      <view class="dt-item" wx:for="{{dragonTigerList}}" wx:key="name">
-        <view class="dt-rank">{{index + 1}}</view>
-        <view class="dt-info">
-          <view class="dt-name">{{item.name}}</view>
-          <view class="dt-reason">{{item.reason}}</view>
+    <!-- 资金流向摘要 -->
+    <view class="flow-summary-card">
+      <view class="flow-header">
+        <text class="flow-title">💰 资金动向</text>
+      </view>
+      <view class="flow-row">
+        <view class="flow-item">
+          <text class="flow-label">北向资金</text>
+          <text class="flow-value {{fundFlow.northFlow >= 0 ? 'rise' : 'fall'}}">
+            {{fundFlow.northFlow >= 0 ? '+' : ''}}{{fundFlow.northFlow}}亿
+          </text>
         </view>
-        <view class="dt-change {{item.change > 0 ? 'rise' : 'fall'}}">
-          {{item.change > 0 ? '+' : ''}}{{item.change}}%
+        <view class="flow-item">
+          <text class="flow-label">主力净流入</text>
+          <text class="flow-value {{fundFlow.mainFlow >= 0 ? 'rise' : 'fall'}}">
+            {{fundFlow.mainFlow >= 0 ? '+' : ''}}{{fundFlow.mainFlow}}亿
+          </text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 龙虎榜 -->
+    <view class="closing-section">
+      <view class="section-header">
+        <text class="section-title">🐉 龙虎榜</text>
+        <text class="section-count">{{dragonTigerList.length}}只</text>
+      </view>
+      <view class="dragon-tiger-list">
+        <view class="dt-item" wx:if="{{dragonTigerList.length > 0}}" wx:for="{{dragonTigerList}}" wx:key="code">
+          <view class="dt-rank">{{index + 1}}</view>
+          <view class="dt-info">
+            <view class="dt-name">{{item.name}}</view>
+            <view class="dt-reason">{{item.reason}}</view>
+          </view>
+          <view class="dt-change {{item.change >= 0 ? 'rise' : 'fall'}}">
+            {{item.change >= 0 ? '+' : ''}}{{item.change}}%
+          </view>
+        </view>
+        <view class="dt-empty" wx:if="{{dragonTigerList.length === 0}}">
+          <text>暂无龙虎榜数据</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- AI 复盘建议 -->
+    <view class="ai-closing-card" wx:if="{{aiData.conclusion}}">
+      <view class="ai-header">
+        <text class="ai-icon">🤖</text>
+        <text class="ai-title">AI 复盘建议</text>
+      </view>
+      <view class="ai-conclusion-text">{{aiData.conclusion}}</view>
+      <view class="ai-risk-line" wx:if="{{aiData.riskWarning}}">
+        <text class="risk-icon-small">⚠️</text>
+        <text class="risk-text-small">{{aiData.riskWarning}}</text>
+      </view>
+      <view class="ai-levels-row" wx:if="{{aiData.keyLevels}}">
+        <view class="level-col">
+          <text class="level-col-label">支撑位</text>
+          <text class="level-col-value support">{{aiData.keyLevels.support || '--'}}</text>
+        </view>
+        <view class="level-col">
+          <text class="level-col-label">压力位</text>
+          <text class="level-col-value resistance">{{aiData.keyLevels.resistance || '--'}}</text>
+        </view>
+      </view>
+      <view class="ai-actions">
+        <view class="ai-action">
+          <text class="action-label">明日建议</text>
+          <text class="action-value">{{aiData.direction}} · {{aiData.suggestion}}</text>
+        </view>
+        <view class="ai-action">
+          <text class="action-label">建议仓位</text>
+          <text class="action-value">{{aiData.targetPosition}}</text>
         </view>
       </view>
     </view>

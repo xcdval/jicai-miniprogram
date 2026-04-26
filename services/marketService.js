@@ -1,134 +1,17 @@
 /**
  * 行情数据服务
- * 接入免费行情API（新浪、腾讯等）
+ * 接入免费行情API（天天基金、新浪）
  */
 
 const storage = require('../utils/storage');
-const format = require('../utils/format');
 
 // 行情数据缓存时间（毫秒）
 const CACHE_TIME = 60000; // 1分钟
 
 /**
- * 获取行情数据（带缓存）
- */
-function getMarketData(codes) {
-  const cacheKey = `market_${codes.join('_')}`;
-  const cached = storage.get(cacheKey);
-
-  if (cached && (Date.now() - cached.time < CACHE_TIME)) {
-    return Promise.resolve(cached.data);
-  }
-
-  return fetchMarketData(codes).then(data => {
-    storage.set(cacheKey, {
-      time: Date.now(),
-      data: data
-    });
-    return data;
-  });
-}
-
-/**
- * 从新浪获取行情数据
- * @param {Array} codes - 股票/基金代码数组
- */
-function fetchMarketData(codes) {
-  return new Promise((resolve, reject) => {
-    if (!codes || codes.length === 0) {
-      resolve({});
-      return;
-    }
-
-    // 格式化代码（新浪接口格式）
-    const formattedCodes = codes.map(code => {
-      // 基金代码
-      if (/^\d{6}$/.test(code)) {
-        if (code.startsWith('5') || code.startsWith('1')) {
-          return `sh${code}`; // 上海基金
-        }
-        return `sz${code}`; // 深圳基金
-      }
-      return code;
-    });
-
-    const url = `https://hq.sinajs.cn/list=${formattedCodes.join(',')}`;
-
-    wx.request({
-      url: url,
-      method: 'GET',
-      header: {
-        'Referer': 'https://finance.sina.com.cn'
-      },
-      success: (res) => {
-        try {
-          const data = parseSinaData(res.data);
-          resolve(data);
-        } catch (e) {
-          console.error('解析行情数据失败:', e);
-          reject(e);
-        }
-      },
-      fail: (err) => {
-        console.error('获取行情数据失败:', err);
-        reject(err);
-      }
-    });
-  });
-}
-
-/**
- * 解析新浪行情数据
- */
-function parseSinaData(responseText) {
-  const result = {};
-
-  if (!responseText) return result;
-
-  // 新浪返回格式: var hq_str_sh600519="贵州茅台,...
-  const lines = responseText.split(';');
-
-  lines.forEach(line => {
-    const match = line.match(/var hq_str_(\w+)="(.+)";/);
-    if (match) {
-      const code = match[1];
-      const data = match[2];
-
-      if (data) {
-        const fields = data.split(',');
-
-        if (fields.length >= 3) {
-          result[code] = {
-            name: fields[0],
-            open: parseFloat(fields[1]) || 0,
-            close: parseFloat(fields[2]) || 0,
-            current: parseFloat(fields[3]) || 0,
-            high: parseFloat(fields[4]) || 0,
-            low: parseFloat(fields[5]) || 0,
-            volume: parseInt(fields[8]) || 0,
-            amount: parseFloat(fields[9]) || 0,
-            updateTime: format.formatDate(new Date(), 'YYYY-MM-DD HH:mm:ss')
-          };
-
-          // 计算涨跌幅
-          if (result[code].close > 0) {
-            const change = result[code].current - result[code].close;
-            result[code].change = change;
-            result[code].changePercent = (change / result[code].close * 100);
-          } else {
-            result[code].change = 0;
-            result[code].changePercent = 0;
-          }
-        }
-      }
-    }
-  });
-
-  return result;
-}
-
-/**
  * 获取基金净值（使用天天基金接口）
+ * @param {string} fundCode - 基金代码
+ * @returns {Promise<Object>} 基金净值数据
  */
 function getFundNav(fundCode) {
   return new Promise((resolve, reject) => {
@@ -137,47 +20,106 @@ function getFundNav(fundCode) {
       return;
     }
 
-    const url = `https://fundgz.1234567.com.cn/js/${fundCode}.js`;
+    // 先检查缓存
+    const cacheKey = `fund_nav_${fundCode}`;
+    const cached = storage.get(cacheKey);
+    if (cached && (Date.now() - cached.time < CACHE_TIME)) {
+      resolve(cached.data);
+      return;
+    }
+
+    const url = `https://fundgz.1234567.com.cn/js/${fundCode}.js?rt=${Date.now()}`;
 
     wx.request({
       url: url,
       method: 'GET',
+      dataType: 'text',
+      timeout: 10000,
       success: (res) => {
         try {
+          if (!res.data || res.statusCode !== 200) {
+            throw new Error('请求失败');
+          }
+
           // 天天基金返回格式: jsonpgz({"fundcode":"005827",...})
           const match = res.data.match(/jsonpgz\((.+)\)/);
           if (match) {
             const data = JSON.parse(match[1]);
-            resolve({
+            const result = {
               code: data.fundcode,
               name: data.name,
-              nav: parseFloat(data.dwjz), // 单位净值
-              accumNav: parseFloat(data.ljjz), // 累计净值
-              current: parseFloat(data.gsz), // 估算净值
-              changePercent: parseFloat(data.gszzl) || 0,
+              nav: parseFloat(data.dwjz) || 0,
+              accumNav: parseFloat(data.ljjz) || 0,
+              current: parseFloat(data.gsz) || 0,
+              changePercent: parseFloat((parseFloat(data.gszzl) || 0).toFixed(2)),
               date: data.jzrq,
-              updateTime: data.gztime
+              updateTime: data.gztime,
+              isEstimated: data.estmm !== 'null'
+            };
+
+            // 缓存结果
+            storage.set(cacheKey, {
+              time: Date.now(),
+              data: result
             });
+
+            resolve(result);
           } else {
-            reject(new Error('解析基金数据失败'));
+            const fallback = cached ? cached.data : createEmptyFundNav(fundCode);
+            resolve(fallback);
           }
         } catch (e) {
-          reject(e);
+          console.error(`解析基金 ${fundCode} 数据失败:`, e);
+          const fallback = cached ? cached.data : createEmptyFundNav(fundCode);
+          resolve(fallback);
         }
       },
-      fail: reject
+      fail: (err) => {
+        console.error(`获取基金 ${fundCode} 净值失败:`, err);
+        if (cached) {
+          resolve(cached.data);
+        } else {
+          resolve(createEmptyFundNav(fundCode));
+        }
+      }
     });
   });
 }
 
 /**
+ * 创建空基金数据
+ */
+function createEmptyFundNav(fundCode) {
+  return {
+    code: fundCode,
+    name: '未知',
+    nav: 0,
+    accumNav: 0,
+    current: 0,
+    changePercent: 0,
+    date: '',
+    updateTime: '',
+    isEstimated: false,
+    isStale: true
+  };
+}
+
+/**
  * 批量获取基金净值
+ * @param {Array<string>} fundCodes - 基金代码数组
+ * @returns {Promise<Object>} 基金净值数据映射
  */
 function getBatchFundNav(fundCodes) {
-  const promises = fundCodes.map(code =>
+  if (!fundCodes || fundCodes.length === 0) {
+    return Promise.resolve({});
+  }
+
+  const uniqueCodes = [...new Set(fundCodes)];
+
+  const promises = uniqueCodes.map(code =>
     getFundNav(code).catch(err => {
       console.error(`获取基金 ${code} 净值失败:`, err);
-      return null;
+      return createEmptyFundNav(code);
     })
   );
 
@@ -185,7 +127,7 @@ function getBatchFundNav(fundCodes) {
     const data = {};
     results.forEach((item, index) => {
       if (item) {
-        data[fundCodes[index]] = item;
+        data[uniqueCodes[index]] = item;
       }
     });
     return data;
@@ -193,17 +135,168 @@ function getBatchFundNav(fundCodes) {
 }
 
 /**
+ * 新浪股票行情接口
+ * @param {Array<string>} codes - 股票代码数组
+ * @returns {Promise<Object>} 行情数据
+ */
+function getStockQuotes(codes) {
+  if (!codes || codes.length === 0) {
+    return Promise.resolve({});
+  }
+
+  const cacheKey = `stock_${codes.sort().join('_')}`;
+  const cached = storage.get(cacheKey);
+
+  // 30秒缓存
+  if (cached && (Date.now() - cached.time < 30000)) {
+    return Promise.resolve(cached.data);
+  }
+
+  // 转换代码格式: 1.600519 -> sh600519, 0.300750 -> sz300750
+  const sinaCodes = codes.map(code => {
+    if (code.startsWith('1.')) return `sh${code.slice(2)}`;
+    if (code.startsWith('0.')) return `sz${code.slice(2)}`;
+    return code;
+  });
+
+  const url = `https://hq.sinajs.cn/list=${sinaCodes.join(',')}`;
+
+  return new Promise((resolve) => {
+    wx.request({
+      url: url,
+      method: 'GET',
+      timeout: 10000,
+      header: {
+        'Referer': 'https://finance.sina.com.cn/'
+      },
+      success: (res) => {
+        try {
+          if (!res.data) {
+            throw new Error('无数据');
+          }
+
+          const result = {};
+          const lines = res.data.split(';');
+
+          lines.forEach(line => {
+            const match = line.match(/var hq_str_(\w+)="(.+)"/);
+            if (match) {
+              const code = match[1];
+              const data = match[2].split(',');
+              if (data.length >= 4) {
+                const realCode = code.replace(/^(sh|sz)/, '');
+                const change = parseFloat(data[3]) - parseFloat(data[2]);
+                const changePercent = parseFloat(data[2]) > 0
+                  ? ((parseFloat(data[3]) - parseFloat(data[2])) / parseFloat(data[2]) * 100)
+                  : 0;
+                result[realCode] = {
+                  code: realCode,
+                  name: data[0] || '未知',
+                  open: parseFloat(data[1]) || 0,
+                  previousClose: parseFloat(data[2]) || 0,
+                  current: parseFloat(data[3]) || 0,
+                  high: parseFloat(data[4]) || 0,
+                  low: parseFloat(data[5]) || 0,
+                  change: parseFloat(change.toFixed(2)),
+                  changePercent: parseFloat(changePercent.toFixed(2))
+                };
+              }
+            }
+          });
+
+          storage.set(cacheKey, {
+            time: Date.now(),
+            data: result
+          });
+
+          resolve(result);
+        } catch (e) {
+          console.error('新浪行情解析失败:', e);
+          if (cached) {
+            resolve(cached.data);
+          } else {
+            resolve({});
+          }
+        }
+      },
+      fail: (err) => {
+        console.error('新浪行情获取失败:', err);
+        if (cached) {
+          resolve(cached.data);
+        } else {
+          resolve({});
+        }
+      }
+    });
+  });
+}
+
+/**
+ * 获取单只股票行情
+ * @param {string} code - 股票代码
+ * @returns {Promise<Object>} 股票行情
+ */
+function getStockQuote(code) {
+  return getStockQuotes([code]).then(result => {
+    return result[code] || createEmptyStockQuote(code);
+  });
+}
+
+/**
+ * 创建空股票行情
+ */
+function createEmptyStockQuote(code) {
+  return {
+    code: code,
+    name: '未知',
+    current: 0,
+    change: 0,
+    changePercent: 0,
+    high: 0,
+    low: 0,
+    open: 0,
+    previousClose: 0,
+    isStale: true
+  };
+}
+
+/**
  * 获取指数行情
+ * @returns {Promise<Object>} 指数行情数据
  */
 function getIndexData() {
-  const indices = [
-    { code: 'sh000001', name: '上证指数' },
-    { code: 'sz399001', name: '深证成指' },
-    { code: 'sz399006', name: '创业板指' },
-    { code: 'sh000688', name: '科创50' }
-  ];
+  const cacheKey = 'index_data_cache';
+  const cached = storage.get(cacheKey);
 
-  return getMarketData(indices.map(i => i.code));
+  if (cached && (Date.now() - cached.time < CACHE_TIME)) {
+    return Promise.resolve(cached.data);
+  }
+
+  // 上证、深证、创业板、科创50
+  const indices = ['1.000001', '0.399001', '0.399006', '1.000688'];
+
+  return getStockQuotes(indices).then(data => {
+    const result = {
+      上证指数: data['000001'] || { name: '上证指数', current: 0, change: 0, changePercent: 0 },
+      深证成指: data['399001'] || { name: '深证成指', current: 0, change: 0, changePercent: 0 },
+      创业板指: data['399006'] || { name: '创业板指', current: 0, change: 0, changePercent: 0 },
+      科创50: data['000688'] || { name: '科创50', current: 0, change: 0, changePercent: 0 }
+    };
+
+    storage.set(cacheKey, {
+      time: Date.now(),
+      data: result
+    });
+
+    return result;
+  }).catch(() => {
+    return {
+      上证指数: { name: '上证指数', current: 0, change: 0, changePercent: 0 },
+      深证成指: { name: '深证成指', current: 0, change: 0, changePercent: 0 },
+      创业板指: { name: '创业板指', current: 0, change: 0, changePercent: 0 },
+      科创50: { name: '科创50', current: 0, change: 0, changePercent: 0 }
+    };
+  });
 }
 
 /**
@@ -217,13 +310,19 @@ function calculateRealtimeProfit(assets, marketData) {
     if (market) {
       result.currentPrice = market.current || asset.currentPrice;
       result.marketValue = result.currentPrice * result.shares;
-      result.cost = asset.costPrice * asset.shares;
+      result.cost = asset.costPrice * result.shares;
       result.profit = result.marketValue - result.cost;
-      result.profitPercent = result.cost > 0
-        ? (result.profit / result.cost * 100)
-        : 0;
+      result.profitPercent = result.cost > 0 ? (result.profit / result.cost * 100) : 0;
       result.todayChange = market.changePercent || 0;
       result.todayProfit = result.marketValue * (result.todayChange / 100);
+    } else {
+      result.currentPrice = asset.currentPrice || asset.costPrice;
+      result.marketValue = result.currentPrice * result.shares;
+      result.cost = asset.costPrice * result.shares;
+      result.profit = result.marketValue - result.cost;
+      result.profitPercent = result.cost > 0 ? (result.profit / result.cost * 100) : 0;
+      result.todayChange = 0;
+      result.todayProfit = 0;
     }
 
     return result;
@@ -244,14 +343,29 @@ function getAssetQuotes(assets) {
     promises.push(
       getBatchFundNav(funds.map(f => f.code))
         .then(data => ({ type: 'fund', data }))
+        .catch(err => {
+          console.error('获取基金行情失败:', err);
+          return { type: 'fund', data: {} };
+        })
     );
   }
 
   // 获取股票行情
   if (stocks.length > 0) {
+    const stockCodes = stocks.map(s => {
+      const code = s.code;
+      if (code.startsWith('6')) return `1.${code}`;
+      if (code.startsWith('0') || code.startsWith('3')) return `0.${code}`;
+      return code;
+    });
+
     promises.push(
-      getMarketData(stocks.map(s => s.code))
+      getStockQuotes(stockCodes)
         .then(data => ({ type: 'stock', data }))
+        .catch(err => {
+          console.error('获取股票行情失败:', err);
+          return { type: 'stock', data: {} };
+        })
     );
   }
 
@@ -267,35 +381,53 @@ function getAssetQuotes(assets) {
 }
 
 /**
- * 搜索股票/基金
+ * 搜索股票/基金（使用新浪搜索）
  */
 function searchSymbol(keyword) {
-  return new Promise((resolve, reject) => {
-    if (!keyword || keyword.length < 2) {
+  return new Promise((resolve) => {
+    if (!keyword || keyword.length < 1) {
       resolve([]);
       return;
     }
 
-    // 使用腾讯证券搜索接口
-    const url = `https://smartbox.gtimg.cn/s3/?q=${encodeURIComponent(keyword)}&t=all`;
+    const url = `https://suggest3.sinajs.cn/suggest/type=11,12,13,14,15,16,17,18,19,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220&key=${encodeURIComponent(keyword)}&count=10`;
 
     wx.request({
       url: url,
       method: 'GET',
+      timeout: 5000,
+      header: {
+        'Referer': 'https://finance.sina.com.cn/'
+      },
       success: (res) => {
         try {
-          const data = res.data;
-          if (data && data.data) {
-            const results = data.data.map(item => ({
-              code: item.code,
-              name: item.name,
-              type: item.type === 'fund' ? 'FUND' : 'STOCK'
-            }));
-            resolve(results);
-          } else {
+          if (!res.data) {
             resolve([]);
+            return;
           }
+
+          // 新浪搜索返回格式: var suggest_result = [...];
+          const match = res.data.match(/suggest_result\s*=\s*\[(.+)\]/);
+          if (!match) {
+            resolve([]);
+            return;
+          }
+
+          const items = match[1].split(',');
+          const results = [];
+
+          for (let i = 0; i < items.length && results.length < 10; i += 4) {
+            if (items[i + 1]) {
+              const code = items[i + 1];
+              const name = items[i + 2];
+              const type = code.startsWith('1') || code.startsWith('5') || code.startsWith('4') ? 'FUND' : 'STOCK';
+              results.push({ code, name, type });
+            }
+          }
+
+          resolve(results);
         } catch (e) {
+          console.error('解析搜索结果失败:', e);
           resolve([]);
         }
       },
@@ -304,12 +436,27 @@ function searchSymbol(keyword) {
   });
 }
 
+/**
+ * 清除所有行情缓存
+ */
+function clearCache() {
+  const fundKeys = wx.getStorageInfoSync().keys || [];
+  fundKeys.forEach(key => {
+    if (key.startsWith('fund_nav_') || key.startsWith('stock_') || key === 'index_data_cache') {
+      storage.remove(key);
+    }
+  });
+  return true;
+}
+
 module.exports = {
-  getMarketData,
   getFundNav,
   getBatchFundNav,
+  getStockQuote,
+  getStockQuotes,
   getIndexData,
   calculateRealtimeProfit,
   getAssetQuotes,
-  searchSymbol
+  searchSymbol,
+  clearCache
 };

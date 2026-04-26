@@ -58,6 +58,24 @@
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
 }
 
+.refresh-btn {
+  transition: transform 0.3s ease;
+}
+
+.refresh-btn .refresh-icon {
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.refresh-btn.refreshing .refresh-icon {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* 总资产卡片 - 紧凑版 */
 .total-asset-card {
   background: #ffffff;

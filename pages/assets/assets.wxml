@@ -1,9 +1,6 @@
 <view class="container">
   <!-- 状态栏 -->
-  <view class="status-bar" style="height: {{statusBarHeight}}px;">
-    <text class="status-time">9:41</text>
-    <text class="status-dots">●●●</text>
-  </view>
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
 
   <!-- 导航栏 -->
   <view class="nav-bar" style="height: {{navBarHeight}}px;">
@@ -23,31 +20,26 @@
   </view>
 
   <!-- 总资产卡片 -->
-  <view class="asset-total-card">
+  <view class="asset-total-card" bindtap="gotoAnalysis">
     <view class="asset-total-header">
       <text class="asset-total-label">总资产</text>
       <view class="asset-eye-icon" bindtap="toggleAmount">{{showAmount ? '👁' : '🙈'}}</view>
     </view>
-    <view class="asset-total-amount">{{showAmount ? '¥ 370,579.00' : '¥ ****'}}</view>
-    <view class="asset-total-stats">
-      <view class="asset-stat-left">
-        <view class="asset-stat-item">
-          <text class="asset-stat-label">总收益</text>
-          <text class="asset-stat-value rise">+12,580 +3.51%</text>
-        </view>
-        <view class="asset-stat-item">
-          <text class="asset-stat-label">持仓盈亏</text>
-          <text class="asset-stat-value rise">+8,420 +2.32%</text>
+    <view class="asset-total-amount">{{showAmount ? totalAmount : '¥ ****'}}</view>
+    <view class="asset-total-profit">
+      <view class="profit-item">
+        <text class="profit-label">总收益</text>
+        <view class="profit-value-row">
+          <text class="profit-amount {{totalProfit >= 0 ? 'rise' : 'fall'}}">{{totalProfit >= 0 ? '+' : ''}}{{totalProfit}}</text>
+          <text class="profit-percent {{totalProfit >= 0 ? 'rise' : 'fall'}}">{{totalProfitPercent >= 0 ? '+' : ''}}{{totalProfitPercent}}%</text>
         </view>
       </view>
-      <view class="asset-stat-right">
-        <view class="asset-stat-item">
-          <text class="asset-stat-label">年化收益率</text>
-          <text class="asset-stat-value">+8.56%</text>
-        </view>
-        <view class="asset-stat-item">
-          <text class="asset-stat-label">今日盈亏</text>
-          <text class="asset-stat-value rise">+1,240 +0.34%</text>
+      <view class="profit-divider"></view>
+      <view class="profit-item">
+        <text class="profit-label">今日收益</text>
+        <view class="profit-value-row">
+          <text class="profit-amount {{todayProfit >= 0 ? 'rise' : 'fall'}}">{{todayProfit >= 0 ? '+' : ''}}{{todayProfit}}</text>
+          <text class="profit-percent {{todayProfit >= 0 ? 'rise' : 'fall'}}">{{todayProfitPercent >= 0 ? '+' : ''}}{{todayProfitPercent}}%</text>
         </view>
       </view>
     </view>

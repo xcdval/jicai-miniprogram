@@ -29,7 +29,18 @@ Page({
   },
 
   loadDeposits() {
-    const deposits = assetService.getAssetsByType('DEPOSIT') || this.getMockDeposits();
+    const deposits = assetService.getEnrichedAssetsByType('DEPOSIT');
+    if (deposits.length === 0) {
+      this.setData({
+        allDeposits: [],
+        depositList: [],
+        totalAmount: '¥ 0',
+        depositCount: 0,
+        avgRate: 0,
+        yearlyIncome: '¥ 0'
+      });
+      return;
+    }
     this.setData({
       allDeposits: deposits,
       depositList: deposits
@@ -37,49 +48,26 @@ Page({
     this.calculateSummary(deposits);
   },
 
-  getMockDeposits() {
-    return [
-      {
-        id: 1,
-        name: '招商银行定期存款',
-        bank: '招商银行',
-        rate: 2.8,
-        term: '3年',
-        amount: '¥ 50,000',
-        dueDate: '2027-03-15',
-        dailyIncome: '¥ 3.84'
-      },
-      {
-        id: 2,
-        name: '工商银行活期存款',
-        bank: '工商银行',
-        rate: 1.5,
-        term: '活期',
-        amount: '¥ 50,000',
-        dueDate: '随时可取',
-        dailyIncome: '¥ 2.05'
-      }
-    ];
-  },
-
   calculateSummary(deposits) {
     let total = 0;
     let totalRate = 0;
+    let yearlyIncomeTotal = 0;
 
     deposits.forEach(deposit => {
-      const amount = parseFloat(deposit.amount.replace(/[¥,]/g, ''));
+      const amount = deposit.amount || 0;
+      const rate = deposit.annualRate || 0;
       total += amount;
-      totalRate += deposit.rate;
+      totalRate += rate;
+      yearlyIncomeTotal += deposit.dailyIncome * 365;
     });
 
     const avgRate = deposits.length > 0 ? (totalRate / deposits.length).toFixed(2) : 0;
-    const yearlyIncome = total * avgRate / 100;
 
     this.setData({
       totalAmount: format.formatAmount(total),
       depositCount: deposits.length,
       avgRate: avgRate,
-      yearlyIncome: format.formatAmount(yearlyIncome)
+      yearlyIncome: format.formatAmount(yearlyIncomeTotal)
     });
   },
 
@@ -93,8 +81,10 @@ Page({
     let filtered = this.data.allDeposits;
 
     if (keyword) {
+      const kw = keyword.toLowerCase();
       filtered = filtered.filter(d =>
-        d.name.includes(keyword) || d.bank.includes(keyword)
+        d.name.toLowerCase().includes(kw) ||
+        (d.platform && d.platform.toLowerCase().includes(kw))
       );
     }
 
@@ -103,7 +93,9 @@ Page({
 
   viewDepositDetail(e) {
     const id = e.currentTarget.dataset.id;
-    wx.showToast({ title: '查看详情开发中', icon: 'none' });
+    wx.navigateTo({
+      url: `/pages/asset-edit/asset-edit?id=${id}&type=DEPOSIT`
+    });
   },
 
   addDeposit() {

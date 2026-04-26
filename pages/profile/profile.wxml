@@ -129,6 +129,48 @@
     </view>
   </view>
 
+  <!-- AI 设置 -->
+  <view class="section-title">AI 智能决策设置</view>
+  <view class="ai-config-card">
+    <view class="config-row">
+      <text class="config-label">启用 AI 分析</text>
+      <switch checked="{{deepseekUseAI}}" bindchange="onUseAIToggle"/>
+    </view>
+    <view class="config-row">
+      <text class="config-label">API Key</text>
+      <view class="api-key-input-row">
+        <input class="config-input" password="{{!showApiKey}}" value="{{deepseekApiKey}}" bindinput="onApiKeyInput" placeholder="sk-xxxxxxxx"/>
+        <view class="show-key-btn" bindtap="toggleShowApiKey">{{showApiKey ? '隐藏' : '显示'}}</view>
+      </view>
+    </view>
+    <view class="config-row">
+      <text class="config-label">模型</text>
+      <input class="config-input" value="{{deepseekModel}}" bindinput="onModelInput" placeholder="deepseek-chat"/>
+    </view>
+    <view class="save-btn" bindtap="saveDeepseekConfig">保存配置</view>
+  </view>
+
+  <!-- OCR 设置 -->
+  <view class="section-title">OCR 识别设置</view>
+  <view class="ai-config-card">
+    <view class="config-row">
+      <text class="config-label">启用腾讯云 OCR</text>
+      <switch checked="{{ocrUseCloud}}" bindchange="onOcrUseCloudToggle"/>
+    </view>
+    <view class="config-row">
+      <text class="config-label">SecretId</text>
+      <input class="config-input" value="{{ocrSecretId}}" bindinput="onOcrSecretIdInput" placeholder="AKID..."/>
+    </view>
+    <view class="config-row">
+      <text class="config-label">SecretKey</text>
+      <view class="api-key-input-row">
+        <input class="config-input" password="{{!showOcrSecretKey}}" value="{{ocrSecretKey}}" bindinput="onOcrSecretKeyInput" placeholder="..."/>
+        <view class="show-key-btn" bindtap="toggleShowOcrSecretKey">{{showOcrSecretKey ? '隐藏' : '显示'}}</view>
+      </view>
+    </view>
+    <view class="save-btn" bindtap="saveOcrConfig">保存配置</view>
+  </view>
+
   <!-- 关于 -->
   <view class="menu-card">
     <view class="menu-item" bindtap="showToast">

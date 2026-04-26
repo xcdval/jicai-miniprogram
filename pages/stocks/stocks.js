@@ -11,7 +11,9 @@ Page({
     allStocks: [],
     totalMarketValue: '¥ 0',
     totalProfit: 0,
-    todayProfit: 0
+    todayProfit: 0,
+    isLoading: false,
+    lastUpdateTime: ''
   },
 
   onLoad() {
@@ -28,8 +30,25 @@ Page({
     this.loadStocks();
   },
 
+  // 下拉刷新
+  onPullDownRefresh() {
+    this.refreshStocks().then(() => {
+      wx.stopPullDownRefresh();
+    });
+  },
+
   loadStocks() {
-    const stocks = assetService.getAssetsByType('STOCK') || this.getMockStocks();
+    const stocks = assetService.getEnrichedAssetsByType('STOCK');
+    if (stocks.length === 0) {
+      this.setData({
+        allStocks: [],
+        stockList: [],
+        totalMarketValue: '¥ 0',
+        totalProfit: 0,
+        todayProfit: 0
+      });
+      return;
+    }
     this.setData({
       allStocks: stocks,
       stockList: stocks
@@ -37,48 +56,22 @@ Page({
     this.calculateSummary(stocks);
   },
 
-  getMockStocks() {
-    return [
-      {
-        id: 1,
-        name: '贵州茅台',
-        code: '600519',
-        platform: '华泰证券',
-        costPrice: '1,520.00',
-        currentPrice: '1,568.00',
-        marketValue: '¥ 78,400',
-        holdings: '50',
-        profit: 2400,
-        profitPercent: 3.16,
-        todayChange: 1.5
-      },
-      {
-        id: 2,
-        name: '宁德时代',
-        code: '300750',
-        platform: '华泰证券',
-        costPrice: '205.00',
-        currentPrice: '198.50',
-        marketValue: '¥ 19,850',
-        holdings: '100',
-        profit: -650,
-        profitPercent: -3.17,
-        todayChange: -0.8
-      },
-      {
-        id: 3,
-        name: '比亚迪',
-        code: '002594',
-        platform: '东方财富',
-        costPrice: '245.00',
-        currentPrice: '262.50',
-        marketValue: '¥ 26,250',
-        holdings: '100',
-        profit: 1750,
-        profitPercent: 7.14,
-        todayChange: 2.3
-      }
-    ];
+  // 刷新股票数据（带行情）
+  async refreshStocks() {
+    this.setData({ isLoading: true });
+    try {
+      await assetService.refreshAssetPrices();
+      this.loadStocks();
+      this.setData({
+        lastUpdateTime: format.formatTime(new Date())
+      });
+      wx.showToast({ title: '刷新成功', icon: 'success' });
+    } catch (e) {
+      console.error('刷新失败:', e);
+      wx.showToast({ title: '刷新失败', icon: 'none' });
+    } finally {
+      this.setData({ isLoading: false });
+    }
   },
 
   calculateSummary(stocks) {
@@ -87,12 +80,11 @@ Page({
     let todayProfit = 0;
 
     stocks.forEach(stock => {
-      const value = parseFloat(stock.marketValue.replace(/[¥,]/g, ''));
-      const holdings = parseFloat(stock.holdings);
-      const cost = parseFloat(stock.costPrice.replace(/,/g, '')) * holdings;
+      const value = stock.marketValue || 0;
+      const cost = stock.costValue || 0;
       totalValue += value;
       totalCost += cost;
-      todayProfit += value * stock.todayChange / 100;
+      todayProfit += stock.todayProfit || 0;
     });
 
     this.setData({
@@ -124,8 +116,10 @@ Page({
     }
 
     if (keyword) {
+      const kw = keyword.toLowerCase();
       filtered = filtered.filter(s =>
-        s.name.includes(keyword) || s.code.includes(keyword)
+        s.name.toLowerCase().includes(kw) ||
+        (s.code && s.code.toLowerCase().includes(kw))
       );
     }
 
@@ -134,7 +128,9 @@ Page({
 
   viewStockDetail(e) {
     const id = e.currentTarget.dataset.id;
-    wx.showToast({ title: '查看详情开发中', icon: 'none' });
+    wx.navigateTo({
+      url: `/pages/asset-edit/asset-edit?id=${id}&type=STOCK`
+    });
   },
 
   addStock() {
