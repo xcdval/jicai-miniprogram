@@ -449,6 +449,174 @@ function clearCache() {
   return true;
 }
 
+/**
+ * 获取基金历史净值数据（用于计算夏普比率和波动率）
+ * @param {string} fundCode - 基金代码
+ * @param {number} days - 历史天数，默认180天
+ * @returns {Promise<Array>} 历史净值列表 [{date, nav, change}]
+ */
+function getFundHistory(fundCode, days = 180) {
+  return new Promise((resolve, reject) => {
+    if (!fundCode) {
+      resolve([]);
+      return;
+    }
+
+    const cacheKey = `fund_history_${fundCode}`;
+    const cached = storage.get(cacheKey);
+
+    // 缓存6小时
+    if (cached && (Date.now() - cached.time < 21600000)) {
+      resolve(cached.data);
+      return;
+    }
+
+    // 天天基金历史净值接口
+    const url = `https://api.fund.eastmoney.com/f10/lsjz?fundCode=${fundCode}&pageIndex=1&pageSize=${days}&startDate=&endDate=&_=${Date.now()}`;
+
+    wx.request({
+      url: url,
+      method: 'GET',
+      timeout: 15000,
+      header: {
+        'Referer': 'https://fund.eastmoney.com/'
+      },
+      success: (res) => {
+        try {
+          if (res.data && res.data.Data && res.data.Data.LSJZList) {
+            const history = res.data.Data.LSJZList.map(item => ({
+              date: item.FSRQ,
+              nav: parseFloat(item.DWJZ) || 0,
+              accumNav: parseFloat(item.LJJZ) || 0,
+              change: parseFloat(((parseFloat(item.DWJZ) - parseFloat(item.PREVIOUS)) / parseFloat(item.PREVIOUS) * 100).toFixed(4)) || 0
+            })).reverse();
+
+            storage.set(cacheKey, {
+              time: Date.now(),
+              data: history
+            });
+
+            resolve(history);
+          } else {
+            resolve(cached ? cached.data : []);
+          }
+        } catch (e) {
+          console.error(`获取基金 ${fundCode} 历史数据失败:`, e);
+          resolve(cached ? cached.data : []);
+        }
+      },
+      fail: (err) => {
+        console.error(`请求基金 ${fundCode} 历史数据失败:`, err);
+        resolve(cached ? cached.data : []);
+      }
+    });
+  });
+}
+
+/**
+ * 计算基金夏普比率
+ * @param {Array} history - 历史净值数据
+ * @param {number} riskFreeRate - 无风险利率，默认2.5%
+ * @returns {number} 夏普比率
+ */
+function calculateSharpeRatio(history, riskFreeRate = 2.5) {
+  if (!history || history.length < 30) {
+    return 0;
+  }
+
+  // 计算每日收益率
+  const dailyReturns = [];
+  for (let i = 1; i < history.length; i++) {
+    if (history[i].nav > 0 && history[i - 1].nav > 0) {
+      const dailyReturn = (history[i].nav - history[i - 1].nav) / history[i - 1].nav;
+      dailyReturns.push(dailyReturn);
+    }
+  }
+
+  if (dailyReturns.length < 30) {
+    return 0;
+  }
+
+  // 计算平均日收益率
+  const avgReturn = dailyReturns.reduce((sum, r) => sum + r, 0) / dailyReturns.length;
+
+  // 计算收益率标准差
+  const variance = dailyReturns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / dailyReturns.length;
+  const stdDev = Math.sqrt(variance);
+
+  if (stdDev === 0) {
+    return 0;
+  }
+
+  // 年化收益率和年化波动率
+  const annualReturn = avgReturn * 252;
+  const annualStdDev = stdDev * Math.sqrt(252);
+
+  // 夏普比率 = (年化收益率 - 无风险利率) / 年化波动率
+  const sharpe = (annualReturn - riskFreeRate) / annualStdDev;
+
+  // 限制在合理范围
+  return Math.max(-5, Math.min(5, parseFloat(sharpe.toFixed(2))));
+}
+
+/**
+ * 计算基金波动率
+ * @param {Array} history - 历史净值数据
+ * @returns {number} 年化波动率（百分比）
+ */
+function calculateVolatility(history) {
+  if (!history || history.length < 30) {
+    return 0;
+  }
+
+  // 计算每日收益率
+  const dailyReturns = [];
+  for (let i = 1; i < history.length; i++) {
+    if (history[i].nav > 0 && history[i - 1].nav > 0) {
+      const dailyReturn = (history[i].nav - history[i - 1].nav) / history[i - 1].nav;
+      dailyReturns.push(dailyReturn);
+    }
+  }
+
+  if (dailyReturns.length < 30) {
+    return 0;
+  }
+
+  // 计算标准差
+  const avgReturn = dailyReturns.reduce((sum, r) => sum + r, 0) / dailyReturns.length;
+  const variance = dailyReturns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / dailyReturns.length;
+  const dailyStdDev = Math.sqrt(variance);
+
+  // 年化波动率
+  const annualVolatility = dailyStdDev * Math.sqrt(252);
+
+  return parseFloat((annualVolatility * 100).toFixed(2));
+}
+
+/**
+ * 批量获取基金统计指标
+ * @param {Array} funds - 基金列表 [{code, name}]
+ * @returns {Promise<Object>} {sharpeRatio, volatility}
+ */
+async function getFundStatistics(funds) {
+  if (!funds || funds.length === 0) {
+    return { sharpeRatio: 0, volatility: 0 };
+  }
+
+  // 获取第一只基金的统计指标作为代表
+  const fund = funds[0];
+  const history = await getFundHistory(fund.code, 180);
+
+  if (history.length < 30) {
+    return { sharpeRatio: 0, volatility: 0 };
+  }
+
+  return {
+    sharpeRatio: calculateSharpeRatio(history),
+    volatility: calculateVolatility(history)
+  };
+}
+
 module.exports = {
   getFundNav,
   getBatchFundNav,
@@ -458,5 +626,9 @@ module.exports = {
   calculateRealtimeProfit,
   getAssetQuotes,
   searchSymbol,
-  clearCache
+  clearCache,
+  getFundHistory,
+  calculateSharpeRatio,
+  calculateVolatility,
+  getFundStatistics
 };

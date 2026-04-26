@@ -40,8 +40,9 @@ function saveAssets(assets) {
 /**
  * 计算资产统计信息
  * @param {Object} marketQuotes - 市场行情数据（可选）
+ * @param {Object} options - 可选参数 { includeRiskMetrics: boolean }
  */
-function calculateStatistics(marketQuotes = {}) {
+async function calculateStatistics(marketQuotes = {}, options = {}) {
   const assets = getAssets();
   let totalValue = 0;
   let totalCost = 0;
@@ -116,6 +117,27 @@ function calculateStatistics(marketQuotes = {}) {
   const totalProfit = totalValue - totalCost;
   const totalProfitPercent = totalCost > 0 ? parseFloat((totalProfit / totalCost * 100).toFixed(2)) : 0;
 
+  // 计算风险指标（夏普比率、波动率）
+  let sharpeRatio = 0;
+  let volatility = 0;
+
+  if (options.includeRiskMetrics !== false) {
+    try {
+      const marketService = require('./marketService');
+      const funds = assets.groups.flatMap(g =>
+        g.assets.filter(a => a.type === 'FUND').map(a => ({ code: a.code, name: a.name }))
+      );
+
+      if (funds.length > 0) {
+        const stats = await marketService.getFundStatistics(funds);
+        sharpeRatio = stats.sharpeRatio;
+        volatility = stats.volatility;
+      }
+    } catch (e) {
+      console.error('计算风险指标失败:', e);
+    }
+  }
+
   return {
     totalValue,
     totalCost,
@@ -124,6 +146,8 @@ function calculateStatistics(marketQuotes = {}) {
     todayProfit,
     categoryStats,
     assetMetrics,
+    sharpeRatio,
+    volatility,
     updateTime: new Date().toLocaleString('zh-CN')
   };
 }
