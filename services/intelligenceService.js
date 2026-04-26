@@ -442,8 +442,8 @@ function getNewsFlash() {
 
       // 按热度权重 + 时间排序
       allNews.sort(function(a, b) {
-        var scoreA = (a.hotScore || 0) * 100 + (a.rawTime ? new Date(a.rawTime).getTime() : 0);
-        var scoreB = (b.hotScore || 0) * 100 + (b.rawTime ? new Date(b.rawTime).getTime() : 0);
+        var scoreA = (a.hotScore || 0) * 100 + getTimeForSort(a.rawTime);
+        var scoreB = (b.hotScore || 0) * 100 + getTimeForSort(b.rawTime);
         return scoreB - scoreA;
       });
 
@@ -738,7 +738,7 @@ function getEastmoneyDragonTiger() {
 
 function getSinaDragonTiger() {
   return new Promise(function(resolve) {
-    var today = new Date().toISOString().split('T')[0];
+    var today = new Date().toISOString().slice(0, 10).replace(/-/g, '/');
     var url = 'https://vip.stock.finance.sina.com.cn/q/view/newLhb.php?day=' + today;
 
     wx.request({
@@ -1211,11 +1211,35 @@ function getIntelligenceData() {
   });
 }
 
+// iOS 兼容的日期解析
+function parseDateForIOS(timeStr) {
+  if (!timeStr) return null;
+  try {
+    // iOS 支持格式: yyyy/MM/dd, yyyy-MM-dd, yyyy-MM-ddTHH:mm:ss
+    // 转换 "2026-04-26 14:17:13" 为 "2026/04/26 14:17:13"
+    var normalized = String(timeStr).replace(/-/g, '/').replace(' ', 'T');
+    var d = new Date(normalized);
+    if (!isNaN(d.getTime())) return d;
+    // 尝试其他格式
+    d = new Date(timeStr.replace(/\//g, '-'));
+    if (!isNaN(d.getTime())) return d;
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// iOS 兼容的日期比较
+function getTimeForSort(timeStr) {
+  var d = parseDateForIOS(timeStr);
+  return d ? d.getTime() : 0;
+}
+
 function formatNewsTime(timeStr) {
   if (!timeStr) return '';
   try {
-    var d = new Date(timeStr);
-    if (isNaN(d.getTime())) return String(timeStr).slice(-8);
+    var d = parseDateForIOS(timeStr);
+    if (!d) return String(timeStr).slice(-8);
     var h = d.getHours().toString().padStart(2, '0');
     var m = d.getMinutes().toString().padStart(2, '0');
     return h + ':' + m;
