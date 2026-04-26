@@ -20,6 +20,12 @@
 .status-dots {
   font-size: 20rpx;
   letter-spacing: 2rpx;
+  transition: all 0.3s ease;
+}
+
+.status-dots.refreshing {
+  color: #10b981;
+  animation: pulse 1s ease-in-out infinite;
 }
 
 /* 导航栏 - 毛玻璃效果 */

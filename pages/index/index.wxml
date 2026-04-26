@@ -1,8 +1,8 @@
 <view class="container">
   <!-- 状态栏 -->
   <view class="status-bar" style="height: {{statusBarHeight}}px;">
-    <text class="status-time">9:41</text>
-    <text class="status-dots">●●●</text>
+    <text class="status-time">{{lastUpdate || '--:--:--'}}</text>
+    <text class="status-dots {{isPriceRefreshing ? 'refreshing' : ''}}">●●●</text>
   </view>
 
   <!-- 导航栏 -->
@@ -23,8 +23,12 @@
     <view class="total-asset-main">
       <view class="total-asset-amount">{{showAmount ? '¥ 386,542.00' : '¥ ****'}}</view>
       <view class="total-asset-change">
-        <view class="change-amount rise">+ ¥ 2,348.00</view>
-        <view class="change-percent rise">今日 +0.61%</view>
+        <view class="change-amount {{todayProfit >= 0 ? 'rise' : 'fall'}}">
+          {{todayProfit >= 0 ? '+' : ''}}{{showAmount ? todayProfitText : '****'}}
+        </view>
+        <view class="change-percent {{todayProfitPercent >= 0 ? 'rise' : 'fall'}}">
+          今日 {{todayProfitPercent >= 0 ? '+' : ''}}{{todayProfitPercent}}%
+        </view>
       </view>
     </view>
   </view>
@@ -88,7 +92,7 @@
       </view>
       <view class="category-value">
         <text class="category-amount">{{showAmount ? item.value : '****'}}</text>
-        <text class="category-change {{item.change >= 0 ? 'rise' : 'fall'}}">{{item.change >= 0 ? '+' : ''}}{{item.change}}%</text>
+        <text class="category-change {{item.change >= 0 ? 'rise' : 'fall'}}">{{item.changeText}}</text>
       </view>
     </view>
   </view>

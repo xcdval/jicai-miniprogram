@@ -14,6 +14,8 @@ Page({
     showAmount: true,
     totalAmount: 0,
     todayProfit: 0,
+    todayProfitText: '0',
+    todayProfitPercent: 0,
     totalProfit: 0,
     totalProfitPercent: 0,
 
@@ -23,28 +25,28 @@ Page({
 
     // 资产配置
     allocationData: [
-      { type: 'fund', name: '基金', icon: '📊', value: '¥ 0', percent: 0, count: 0, change: 0 },
-      { type: 'stock', name: '股票', icon: '📈', value: '¥ 0', percent: 0, count: 0, change: 0 },
-      { type: 'deposit', name: '存款', icon: '💵', value: '¥ 0', percent: 0, count: 0, change: 0 }
+      { type: 'fund', name: '基金', icon: '📊', value: '¥ 0', percent: 0, count: 0, change: 0, changeText: '0%' },
+      { type: 'stock', name: '股票', icon: '📈', value: '¥ 0', percent: 0, count: 0, change: 0, changeText: '0%' },
+      { type: 'deposit', name: '存款', icon: '💵', value: '¥ 0', percent: 0, count: 0, change: 0, changeText: '0%' }
     ],
 
     // 快讯数据
     newsFlash: [],
 
     // 今日走势
-    todayProfit: 0,
-    todayProfitText: '0',
-    todayProfitPercent: 0,
     todayTrendData: [],
 
     // 刷新状态
     isRefreshing: false,
+    isPriceRefreshing: false,
     refreshCount: 0,
-    lastUpdate: ''
+    lastUpdate: '',
+    priceUpdateTime: ''
   },
 
   // 定时器
   _refreshTimer: null,
+  _priceTimer: null,
 
   onLoad() {
     this.initSystemInfo();
@@ -64,17 +66,23 @@ Page({
     this.stopAutoRefresh();
   },
 
-  // 启动自动刷新 - 每30秒刷新快讯，每60秒刷新行情
+  // 启动自动刷新 - 快讯30秒，行情60秒
   startAutoRefresh() {
     this.stopAutoRefresh();
+
+    // 每30秒刷新快讯
     this._refreshTimer = setInterval(() => {
-      // 每30秒刷新快讯
       intelligenceService.getNewsFlash().then(newsFlash => {
         this.setData({ newsFlash });
       }).catch(() => {
         this.setData({ newsFlash: [] });
       });
     }, 30000);
+
+    // 每60秒刷新资产行情
+    this._priceTimer = setInterval(() => {
+      this.refreshAssetPricesSilent();
+    }, 60000);
   },
 
   // 停止自动刷新
@@ -82,6 +90,36 @@ Page({
     if (this._refreshTimer) {
       clearInterval(this._refreshTimer);
       this._refreshTimer = null;
+    }
+    if (this._priceTimer) {
+      clearInterval(this._priceTimer);
+      this._priceTimer = null;
+    }
+  },
+
+  // 静默刷新资产行情（不显示loading）
+  async refreshAssetPricesSilent() {
+    try {
+      this.setData({ isPriceRefreshing: true });
+      await assetService.refreshAssetPrices();
+      const stats = assetService.calculateStatistics();
+      const showAmount = assetService.getAmountVisibility();
+
+      this.setData({
+        todayProfit: stats.todayProfit,
+        todayProfitText: this.formatNumber(stats.todayProfit),
+        todayProfitPercent: stats.totalValue > 0 ? parseFloat((stats.todayProfit / stats.totalValue * 100).toFixed(2)) : 0,
+        totalProfit: stats.totalProfit,
+        totalProfitPercent: stats.totalProfitPercent,
+        priceUpdateTime: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        isPriceRefreshing: false,
+        showAmount
+      });
+
+      this.updateAllocationDisplay(stats.categoryStats);
+    } catch (e) {
+      console.error('静默刷新行情失败:', e);
+      this.setData({ isPriceRefreshing: false });
     }
   },
 
@@ -335,12 +373,20 @@ Page({
   updateAllocationDisplay(categoryStats) {
     const total = Object.values(categoryStats).reduce((sum, cat) => sum + cat.value, 0);
 
-    // 模拟涨跌数据（待接入真实数据）
-    const changes = {
-      FUND: 0,
-      STOCK: 0,
-      DEPOSIT: 0
+    // 计算各类别的涨跌
+    const calcChange = (type) => {
+      const cat = categoryStats[type];
+      if (!cat || cat.value === 0) return { change: 0, changeText: '0%' };
+      const changePercent = cat.todayProfit / (cat.value - cat.todayProfit) * 100;
+      return {
+        change: changePercent,
+        changeText: (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%'
+      };
     };
+
+    const fundChange = calcChange('FUND');
+    const stockChange = calcChange('STOCK');
+    const depositChange = calcChange('DEPOSIT');
 
     const allocationData = [
       {
@@ -350,7 +396,8 @@ Page({
         value: format.formatAmount(categoryStats.FUND?.value || 0),
         percent: total > 0 ? Math.round((categoryStats.FUND?.value || 0) / total * 100) : 0,
         count: categoryStats.FUND?.count || 0,
-        change: changes.FUND
+        change: fundChange.change,
+        changeText: fundChange.changeText
       },
       {
         type: 'stock',
@@ -359,7 +406,8 @@ Page({
         value: format.formatAmount(categoryStats.STOCK?.value || 0),
         percent: total > 0 ? Math.round((categoryStats.STOCK?.value || 0) / total * 100) : 0,
         count: categoryStats.STOCK?.count || 0,
-        change: changes.STOCK
+        change: stockChange.change,
+        changeText: stockChange.changeText
       },
       {
         type: 'deposit',
@@ -368,7 +416,8 @@ Page({
         value: format.formatAmount(categoryStats.DEPOSIT?.value || 0),
         percent: total > 0 ? Math.round((categoryStats.DEPOSIT?.value || 0) / total * 100) : 0,
         count: categoryStats.DEPOSIT?.count || 0,
-        change: changes.DEPOSIT
+        change: depositChange.change,
+        changeText: depositChange.changeText
       }
     ];
 
