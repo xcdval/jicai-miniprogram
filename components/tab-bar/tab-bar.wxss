@@ -45,6 +45,9 @@
   margin-bottom: 4rpx;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tab-text {
@@ -54,8 +57,8 @@
 }
 
 .tab-item.active {
-  background: linear-gradient(135deg, #2563eb, #10b981);
-  box-shadow: 0 4rpx 12rpx rgba(37, 99, 235, 0.3);
+  background: var(--color-gradient);
+  box-shadow: var(--shadow-glow);
   transform: translateY(-8rpx);
 }
 

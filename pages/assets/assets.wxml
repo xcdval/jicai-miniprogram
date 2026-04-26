@@ -23,7 +23,7 @@
   <view class="asset-total-card" bindtap="gotoAnalysis">
     <view class="asset-total-header">
       <text class="asset-total-label">总资产</text>
-      <view class="asset-eye-icon" bindtap="toggleAmount">{{showAmount ? '👁' : '🙈'}}</view>
+      <view class="asset-eye-icon" bindtap="toggleAmount">{{showAmount ? '●' : '○'}}</view>
     </view>
     <view class="asset-total-amount">{{showAmount ? totalAmount : '¥ ****'}}</view>
     <view class="asset-total-profit">

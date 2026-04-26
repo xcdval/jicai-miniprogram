@@ -12,7 +12,7 @@
   <!-- 搜索栏 -->
   <view class="search-section">
     <view class="search-box">
-      <text class="search-icon">🔍</text>
+      <text class="search-icon">*</text>
       <input type="text" placeholder="搜索存款名称/银行" class="search-input" bindinput="onSearchInput"/>
     </view>
     <view class="add-btn" bindtap="addDeposit">
@@ -24,7 +24,7 @@
   <!-- 存款汇总卡片 -->
   <view class="deposit-summary-card">
     <view class="summary-header">
-      <text class="summary-title">💰 存款总览</text>
+      <text class="summary-title">* 存款总览</text>
     </view>
     <view class="summary-amount">{{totalAmount}}</view>
     <view class="summary-row">
@@ -61,7 +61,7 @@
 
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{depositList.length === 0}}">
-    <view class="empty-icon">🏦</view>
+    <view class="empty-icon">*</view>
     <view class="empty-text">暂无存款数据</view>
     <view class="empty-btn" bindtap="addDeposit">添加存款</view>
   </view>

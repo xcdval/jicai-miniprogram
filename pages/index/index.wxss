@@ -38,7 +38,7 @@
   font-size: 34rpx;
   font-weight: 800;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #2563eb, #10b981);
+  background: var(--color-gradient);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -54,7 +54,7 @@
   border: 1rpx solid rgba(226, 232, 240, 0.8);
   border-radius: 9999rpx;
   font-size: 32rpx;
-  color: #2563eb;
+  color: var(--color-primary);
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
 }
 
@@ -141,7 +141,7 @@
 
 .change-amount.fall,
 .change-percent.fall {
-  color: #10b981;
+  color: var(--color-accent);
 }
 
 /* 市场行情卡片 */
@@ -227,7 +227,7 @@
 }
 
 .market-item.fall .market-item-change {
-  color: #10b981;
+  color: var(--color-accent);
   background: rgba(16, 185, 129, 0.1);
 }
 
@@ -326,7 +326,7 @@
 
 .section-more {
   font-size: 24rpx;
-  color: #2563eb;
+  color: var(--color-primary);
   font-weight: 500;
 }
 
@@ -426,7 +426,7 @@
 }
 
 .category-change.fall {
-  color: #10b981;
+  color: var(--color-accent);
 }
 
 /* 通用涨跌样式 */
@@ -435,7 +435,7 @@
 }
 
 .fall {
-  color: #10b981;
+  color: var(--color-accent);
 }
 
 /* 今日走势区域 */
@@ -511,5 +511,5 @@
 
 .today-value.fall,
 .today-rate.fall {
-  color: #10b981;
+  color: var(--color-accent);
 }

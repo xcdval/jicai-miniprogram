@@ -619,7 +619,14 @@ Page({
   },
 
   viewDetailReport() {
-    wx.showToast({ title: '详细报告功能开发中', icon: 'none' });
+    const stats = this.data.stats;
+    const healthScore = this.data.healthScore;
+    wx.showModal({
+      title: '📊 分析报告摘要',
+      content: `累计收益: ${stats.totalReturnText}\n收益率: ${stats.totalReturnPercent}%\n持仓健康度: ${healthScore}分\n\n详细报告功能即将上线，敬请期待！`,
+      confirmText: '知道了',
+      showCancel: false
+    });
   },
 
   gotoAssets() {

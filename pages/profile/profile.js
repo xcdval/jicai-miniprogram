@@ -75,13 +75,34 @@ Page({
   },
   navigateTo(e) {
     const page = e.currentTarget.dataset.page;
-    wx.showToast({ title: `${page} 功能开发中`, icon: 'none' });
+    const featureInfo = {
+      messages: '消息中心 - 即将支持订单提醒、价格警报',
+      statistics: '资产统计 - 详细分析报告功能',
+      strategy: '投资策略 - 个性化投资建议'
+    };
+    wx.showModal({
+      title: '📋 ' + (featureInfo[page] || page),
+      content: '此功能正在开发中，敬请期待！',
+      confirmText: '知道了',
+      showCancel: false
+    });
+  },
+  showToast(e) {
+    const page = e.currentTarget.dataset.page || '功能';
+    wx.showModal({
+      title: '📌 ' + page,
+      content: '此功能正在开发中，敬请期待！',
+      confirmText: '知道了',
+      showCancel: false
+    });
   },
   showSettings() {
-    wx.showToast({ title: '设置功能开发中', icon: 'none' });
-  },
-  showToast() {
-    wx.showToast({ title: '功能开发中', icon: 'none' });
+    wx.showModal({
+      title: '⚙️ 设置',
+      content: '设置功能已整合到各页面中，您可以使用顶部的⚙️按钮或各功能设置项。',
+      confirmText: '知道了',
+      showCancel: false
+    });
   },
 
   // DeepSeek API Key 输入

@@ -15,7 +15,7 @@
   <!-- 资产类型切换 - 卡片式 -->
   <view class="type-tabs-card" wx:if="{{mode === 'add'}}">
     <view class="type-tab {{assetType === 'FUND' ? 'active' : ''}}" data-type="FUND" bindtap="switchType">
-      <view class="type-tab-icon">📊</view>
+      <view class="type-tab-icon">基</view>
       <view class="type-tab-content">
         <view class="type-tab-name">基金</view>
         <view class="type-tab-desc">股票型、债券型、指数基金</view>
@@ -23,7 +23,7 @@
       <view class="type-tab-check" wx:if="{{assetType === 'FUND'}}">✓</view>
     </view>
     <view class="type-tab {{assetType === 'STOCK' ? 'active' : ''}}" data-type="STOCK" bindtap="switchType">
-      <view class="type-tab-icon">📈</view>
+      <view class="type-tab-icon">股</view>
       <view class="type-tab-content">
         <view class="type-tab-name">股票</view>
         <view class="type-tab-desc">A股、港股、美股</view>
@@ -31,7 +31,7 @@
       <view class="type-tab-check" wx:if="{{assetType === 'STOCK'}}">✓</view>
     </view>
     <view class="type-tab {{assetType === 'DEPOSIT' ? 'active' : ''}}" data-type="DEPOSIT" bindtap="switchType">
-      <view class="type-tab-icon">💰</view>
+      <view class="type-tab-icon">存</view>
       <view class="type-tab-content">
         <view class="type-tab-name">存款</view>
         <view class="type-tab-desc">定期、活期、大额存单</view>
@@ -45,7 +45,7 @@
     <!-- 基本信息卡片 -->
     <view class="form-card">
       <view class="form-card-header">
-        <view class="form-card-icon">📋</view>
+        <view class="form-card-icon">基</view>
         <view class="form-card-title">基本信息</view>
       </view>
 
@@ -98,7 +98,7 @@
     <!-- 分组选择 -->
     <view class="form-card">
       <view class="form-card-header">
-        <view class="form-card-icon">🏷️</view>
+        <view class="form-card-icon">组</view>
         <view class="form-card-title">选择分组</view>
       </view>
       <view class="group-tags">
@@ -117,65 +117,64 @@
     <!-- 投资信息卡片 -->
     <view class="form-card" wx:if="{{assetType !== 'DEPOSIT'}}">
       <view class="form-card-header">
-        <view class="form-card-icon">💹</view>
+        <view class="form-card-icon">投</view>
         <view class="form-card-title">投资信息</view>
       </view>
 
-      <view class="form-row">
-        <view class="form-item half">
-          <view class="form-label">
-            <text class="required">*</text>
-            <text>成本价</text>
-          </view>
-          <input class="form-input {{errors.costPrice ? 'error' : ''}}"
-                 type="digit"
-                 placeholder="0.00"
-                 data-field="costPrice"
-                 value="{{form.costPrice}}"
-                 bindinput="onInput"/>
-          <text class="error-msg" wx:if="{{errors.costPrice}}">{{errors.costPrice}}</text>
+      <!-- 成本/净值 -->
+      <view class="form-item">
+        <view class="form-label">
+          <text class="required">*</text>
+          <text>{{assetType === 'FUND' ? '成本价' : '买入价'}}</text>
         </view>
-
-        <view class="form-item half">
-          <view class="form-label">
-            <text class="required">*</text>
-            <text>{{assetType === 'FUND' ? '持有份额' : '持股数量'}}</text>
-          </view>
-          <input class="form-input {{errors.shares ? 'error' : ''}}"
-                 type="digit"
-                 placeholder="0"
-                 data-field="shares"
-                 value="{{form.shares}}"
-                 bindinput="onInput"/>
-          <text class="error-msg" wx:if="{{errors.shares}}">{{errors.shares}}</text>
-        </view>
+        <input class="form-input {{errors.costPrice ? 'error' : ''}}"
+               type="digit"
+               placeholder="{{assetType === 'FUND' ? '如：1.523' : '如：280.50'}}"
+               data-field="costPrice"
+               value="{{form.costPrice}}"
+               bindinput="onInput"/>
+        <text class="error-msg" wx:if="{{errors.costPrice}}">{{errors.costPrice}}</text>
       </view>
 
+      <!-- 持仓/数量 -->
       <view class="form-item">
-        <view class="form-label-row">
-          <text class="form-label">当前净值/价格</text>
-          <text class="form-label-hint">选填</text>
+        <view class="form-label">
+          <text class="required">*</text>
+          <text>{{assetType === 'FUND' ? '持仓份额' : '持仓数量'}}</text>
         </view>
-        <input class="form-input"
+        <input class="form-input {{errors.holdings ? 'error' : ''}}"
                type="digit"
-               placeholder="留空则使用成本价计算"
-               data-field="currentPrice"
-               value="{{form.currentPrice}}"
+               placeholder="{{assetType === 'FUND' ? '如：10000' : '如：100'}}"
+               data-field="holdings"
+               value="{{form.holdings}}"
                bindinput="onInput"/>
-        <view class="form-tip-row">
-          <text class="form-tip-icon">💡</text>
-          <text class="form-tip">填写后可在资产页面查看实时盈亏</text>
+        <text class="error-msg" wx:if="{{errors.holdings}}">{{errors.holdings}}</text>
+      </view>
+
+      <!-- 当前净值 -->
+      <view class="form-item" wx:if="{{assetType === 'FUND'}}">
+        <view class="form-label">
+          <text class="required">*</text>
+          <text>最新净值</text>
         </view>
+        <input class="form-input {{errors.nav ? 'error' : ''}}"
+               type="digit"
+               placeholder="如：1.650"
+               data-field="nav"
+               value="{{form.nav}}"
+               bindinput="onInput"/>
+        <text class="error-msg" wx:if="{{errors.nav}}">{{errors.nav}}</text>
       </view>
     </view>
 
     <!-- 存款信息卡片 -->
     <view class="form-card" wx:if="{{assetType === 'DEPOSIT'}}">
       <view class="form-card-header">
-        <view class="form-card-icon">🏦</view>
+        <view class="form-card-icon">存</view>
         <view class="form-card-title">存款信息</view>
       </view>
 
+      <!-- 金额 -->
       <view class="form-item">
         <view class="form-label">
           <text class="required">*</text>
@@ -183,80 +182,79 @@
         </view>
         <input class="form-input {{errors.amount ? 'error' : ''}}"
                type="digit"
-               placeholder="0.00"
+               placeholder="如：100000"
                data-field="amount"
                value="{{form.amount}}"
                bindinput="onInput"/>
         <text class="error-msg" wx:if="{{errors.amount}}">{{errors.amount}}</text>
       </view>
 
+      <!-- 年化利率 -->
       <view class="form-item">
-        <view class="form-label-row">
-          <text class="form-label">年利率（%）</text>
-          <text class="form-label-hint">选填</text>
+        <view class="form-label">
+          <text class="required">*</text>
+          <text>年化利率</text>
         </view>
         <input class="form-input {{errors.annualRate ? 'error' : ''}}"
                type="digit"
-               placeholder="如：2.85"
+               placeholder="如：3.85"
                data-field="annualRate"
                value="{{form.annualRate}}"
                bindinput="onInput"/>
         <text class="error-msg" wx:if="{{errors.annualRate}}">{{errors.annualRate}}</text>
       </view>
 
-      <view class="form-row">
-        <view class="form-item half">
-          <view class="form-label">
-            <text>起息日</text>
-          </view>
-          <picker mode="date" value="{{form.startDate}}" data-field="startDate" bindchange="onInput">
-            <view class="form-picker {{form.startDate ? '' : 'placeholder'}}">
-              <text>{{form.startDate || '请选择'}}</text>
-              <text class="picker-arrow">›</text>
-            </view>
-          </picker>
+      <!-- 存款期限 -->
+      <view class="form-item">
+        <view class="form-label">
+          <text class="required">*</text>
+          <text>存款期限</text>
         </view>
+        <input class="form-input {{errors.term ? 'error' : ''}}"
+               type="text"
+               placeholder="如：1年、3个月、活期"
+               data-field="term"
+               value="{{form.term}}"
+               bindinput="onInput"/>
+        <text class="error-msg" wx:if="{{errors.term}}">{{errors.term}}</text>
+      </view>
 
-        <view class="form-item half">
-          <view class="form-label">
-            <text>到期日</text>
-          </view>
-          <picker mode="date" value="{{form.endDate}}" data-field="endDate" bindchange="onInput">
-            <view class="form-picker {{form.endDate ? '' : 'placeholder'}}">
-              <text>{{form.endDate || '请选择'}}</text>
-              <text class="picker-arrow">›</text>
-            </view>
-          </picker>
+      <!-- 到期日 -->
+      <view class="form-item" wx:if="{{form.term !== '活期'}}">
+        <view class="form-label">
+          <text class="required">*</text>
+          <text>到期日期</text>
         </view>
+        <picker mode="date" value="{{form.endDate}}" bindchange="onDateChange">
+          <view class="form-input {{errors.endDate ? 'error' : ''}}">
+            {{form.endDate || '选择日期'}}
+          </view>
+        </picker>
+        <text class="error-msg" wx:if="{{errors.endDate}}">{{errors.endDate}}</text>
       </view>
     </view>
 
-    <!-- 备注卡片 -->
+    <!-- 备注 -->
     <view class="form-card">
       <view class="form-card-header">
-        <view class="form-card-icon">📝</view>
+        <view class="form-card-icon">备</view>
         <view class="form-card-title">备注</view>
-        <text class="form-card-optional">选填</text>
       </view>
-      <textarea class="form-textarea"
-                placeholder="添加备注信息，如购买理由、预期收益..."
-                data-field="remark"
-                value="{{form.remark}}"
-                bindinput="onInput"
-                maxlength="200"/>
-      <view class="textarea-count">{{form.remark.length || 0}}/200</view>
+      <view class="form-item">
+        <textarea class="form-textarea {{errors.note ? 'error' : ''}}"
+                  placeholder="添加备注信息（可选）"
+                  data-field="note"
+                  value="{{form.note}}"
+                  bindinput="onInput"
+                  maxlength="200"/>
+        <text class="error-msg" wx:if="{{errors.note}}">{{errors.note}}</text>
+      </view>
     </view>
   </scroll-view>
 
-  <!-- 底部按钮 -->
-  <view class="form-footer">
-    <button class="btn btn-primary" bindtap="saveAsset">
-      <text class="btn-icon">✓</text>
-      {{mode === 'edit' ? '保存修改' : '确认添加'}}
-    </button>
-    <view class="btn-cancel" bindtap="goBack">取消</view>
-    <view class="btn-delete" wx:if="{{mode === 'edit'}}" bindtap="deleteAsset">删除资产</view>
+  <!-- 底部操作栏 -->
+  <view class="action-bar">
+    <view class="action-btn cancel-btn" bindtap="goBack">取消</view>
+    <view class="action-btn save-btn" bindtap="saveAsset">{{mode === 'edit' ? '保存' : '添加'}}</view>
   </view>
-
-  <view class="safe-area-bottom"></view>
 </view>

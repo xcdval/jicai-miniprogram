@@ -12,7 +12,7 @@
   <!-- 搜索栏 -->
   <view class="search-section">
     <view class="search-box">
-      <text class="search-icon">🔍</text>
+      <text class="search-icon">*</text>
       <input type="text" placeholder="搜索股票名称/代码" class="search-input" bindinput="onSearchInput"/>
     </view>
     <view class="add-btn" bindtap="addStock">
@@ -69,7 +69,7 @@
 
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{stockList.length === 0}}">
-    <view class="empty-icon">📈</view>
+    <view class="empty-icon">*</view>
     <view class="empty-text">暂无股票数据</view>
     <view class="empty-btn" bindtap="addStock">添加股票</view>
   </view>

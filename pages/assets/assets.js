@@ -126,7 +126,12 @@ Page({
             url: '/pages/asset-ocr/asset-ocr'
           });
         } else {
-          wx.showToast({ title: '功能开发中', icon: 'none' });
+          wx.showModal({
+            title: '📥 导入持仓',
+            content: '支持从Excel/CSV文件批量导入持仓数据，功能即将上线！',
+            confirmText: '知道了',
+            showCancel: false
+          });
         }
       }
     });

@@ -12,7 +12,7 @@
   <!-- 搜索栏 -->
   <view class="search-section">
     <view class="search-box">
-      <text class="search-icon">🔍</text>
+      <text class="search-icon">*</text>
       <input type="text" placeholder="搜索基金名称/代码" class="search-input" bindinput="onSearchInput"/>
     </view>
     <view class="add-btn" bindtap="addFund">
@@ -69,7 +69,7 @@
 
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{fundList.length === 0}}">
-    <view class="empty-icon">📊</view>
+    <view class="empty-icon">*</view>
     <view class="empty-text">暂无基金数据</view>
     <view class="empty-btn" bindtap="addFund">添加基金</view>
   </view>

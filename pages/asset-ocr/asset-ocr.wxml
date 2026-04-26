@@ -44,7 +44,7 @@
     </view>
     <view class="upload-zone {{selectedPlatform ? 'active' : ''}} {{selectedPlatform ? 'platform-' + selectedPlatform : ''}}" bindtap="chooseImage">
       <view class="upload-zone-inner">
-        <view class="upload-illustration">📷</view>
+        <view class="upload-illustration">*</view>
         <view class="upload-main-text">{{selectedPlatform ? '点击上传截图' : '请先选择平台'}}</view>
         <view class="upload-sub-text" wx:if="{{selectedPlatform}}">支持 JPG、PNG 格式</view>
         <view class="upload-hint" wx:if="{{!selectedPlatform}}">选择平台后即可上传</view>
@@ -55,7 +55,7 @@
     <!-- 识别小贴士 -->
     <view class="tips-card">
       <view class="tips-header">
-        <text class="tips-icon">💡</text>
+        <text class="tips-icon">*</text>
         <text class="tips-title">识别小贴士</text>
       </view>
       <view class="tips-list">
@@ -104,7 +104,7 @@
     <!-- 操作按钮 -->
     <view class="action-group" wx:if="{{!isProcessing}}">
       <button class="btn btn-primary btn-large" bindtap="startOCR">
-        <text class="btn-icon">🔍</text> 开始识别
+        <text class="btn-icon">*</text> 开始识别
       </button>
       <view class="btn-text" bindtap="chooseImage">重新选择图片</view>
     </view>
@@ -133,7 +133,7 @@
 
     <!-- 演示模式提示 -->
     <view class="demo-banner" wx:if="{{isDemo}}">
-      <text class="demo-icon">📋</text>
+      <text class="demo-icon">*</text>
       <text class="demo-text">当前为演示数据，请手动输入真实资产信息进行测试</text>
     </view>
 
@@ -236,7 +236,7 @@
     <!-- 操作按钮 -->
     <view class="action-group">
       <button class="btn btn-primary btn-large" bindtap="submitManualText">
-        <text class="btn-icon">🔍</text> 解析文本
+        <text class="btn-icon">*</text> 解析文本
       </button>
       <view class="btn-text" bindtap="chooseImage">重新上传截图</view>
     </view>

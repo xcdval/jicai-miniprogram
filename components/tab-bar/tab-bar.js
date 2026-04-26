@@ -19,7 +19,6 @@ Component({
 
   lifetimes: {
     attached() {
-      // 获取安全区域高度
       const systemInfo = wx.getSystemInfoSync();
       this.setData({
         safeAreaBottom: systemInfo.safeAreaInsetBottom || 0
