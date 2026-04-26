@@ -1,7 +1,8 @@
 {
-  "navigationBarTitleText": "持仓分析",
+  "navigationBarTitleText": "综合分析",
   "navigationStyle": "custom",
   "usingComponents": {
-    "tab-bar": "/components/tab-bar/tab-bar"
+    "tab-bar": "/components/tab-bar/tab-bar",
+    "profit-line": "/components/charts/profit-line/profit-line"
   }
 }

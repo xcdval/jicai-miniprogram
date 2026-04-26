@@ -2,7 +2,7 @@
   <view class="news-flash-header">
     <view class="news-flash-title">
       <text class="news-flash-icon">⚡</text>
-      <text>市场快讯</text>
+      <text>财经热点</text>
       <view class="news-live-badge">LIVE</view>
     </view>
     <view class="news-flash-filter">
@@ -23,17 +23,23 @@
       wx:key="id"
       data-id="{{item.id}}"
     >
-      <view class="news-item-time">
-        <text class="news-time">{{item.time}}</text>
-        <text class="news-tag {{item.category}}">{{item.categoryText}}</text>
+      <view class="news-item-indicator">
+        <view class="news-time-col">
+          <text class="news-time">{{item.time}}</text>
+          <view class="news-relevance {{item.relevance}}">{{item.relevanceText || '一般'}}</view>
+        </view>
+        <view class="news-dot {{item.isHot ? 'hot' : ''}}">
+          <view class="news-dot-inner" wx:if="{{item.isHot}}"></view>
+        </view>
       </view>
       <view class="news-item-content">
-        <text class="news-title">{{item.title}}</text>
-        <text class="news-text">{{item.content}}</text>
+        <view class="news-title-row">
+          <text class="news-hot-tag" wx:if="{{item.isHot}}">🔥</text>
+          <text class="news-category-tag {{item.category}}">{{item.categoryText}}</text>
+          <text class="news-title {{item.isHot ? 'hot' : ''}} {{item.isPin ? 'pin' : ''}}">{{item.title}}</text>
+        </view>
         <view class="news-meta">
           <text class="news-source">{{item.source}}</text>
-          <text class="news-hot" wx:if="{{item.isHot}}">🔥 热</text>
-          <text class="news-stock" wx:if="{{item.stockChange}}">{{item.stockChange}}</text>
         </view>
       </view>
     </view>

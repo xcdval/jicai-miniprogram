@@ -388,6 +388,25 @@ function getFundFlowFallback() {
   };
 }
 
+// ========== 财经热点快讯 - 多数据源聚合 ==========
+
+// 关键词权重配置 - 与股票投资相关性
+var HOT_KEYWORDS = {
+  // 政策宏观 (权重最高)
+  policy: ['央行', '银保监', '证监会', '财政部', '政治局', '国务院', '降准', '降息', '加息', '量化宽松', '逆回购', 'LPR', 'MLF', 'SLF', '外汇', '汇率', '人民币', '美元', '美联署', '鲍威尔'],
+  // 市场资金
+  market: ['北向资金', '主力资金', '净买入', '净卖出', '成交量', '万亿', '万亿级', '外资', '机构', '公募', '私募', 'ETF', '融资融券', '杠杆'],
+  // 板块个股
+  stock: ['涨停', '跌停', '概念股', '龙头股', '妖股', '连板', '炸板', '异动', '拉升', '砸盘', '护盘', 'IPO', '定增', '解禁', '减持', '回购', '分红'],
+  // AI科技 (热点)
+  tech: ['人工智能', 'AI', 'ChatGPT', '大模型', '英伟达', 'GPU', '算力', '芯片', '半导体', '光刻机', '华为', '苹果', '特斯拉', '新能源', '锂电', '固态电池', '机器人'],
+  // 国际市场
+  global: ['美股', '纳斯达克', '道琼斯', '标普', '恒生', '日经', '欧股', '期货', '原油', '黄金', '比特币', '加密货币'],
+  // 公司财报
+  company: ['财报', '业绩', '营收', '净利润', '超预期', '不及预期', '亏损', '盈利', 'Q1', 'Q2', 'Q3', 'Q4', '年报', '中报']
+};
+
+// 获取财经热点快讯 - 多源聚合
 function getNewsFlash() {
   return new Promise(function(resolve) {
     var cacheKey = 'news_flash';
@@ -397,34 +416,52 @@ function getNewsFlash() {
       return;
     }
 
-    getSinaNews().then(function(list) {
+    // 并行获取多个数据源
+    Promise.all([
+      getSinaNews(),
+      getEastmoneyNews(),
+      getTencentNews()
+    ]).then(function(results) {
       var allNews = [];
       var seenIds = {};
 
-      if (Array.isArray(list)) {
-        list.forEach(function(item) {
-          var id = item.id || item.title;
-          if (!seenIds[id]) {
-            seenIds[id] = true;
-            allNews.push(item);
-          }
-        });
-      }
-
-      allNews.sort(function(a, b) {
-        var timeA = a.rawTime || a.time || '';
-        var timeB = b.rawTime || b.time || '';
-        return timeB.localeCompare(timeA);
+      // 合并所有来源
+      results.forEach(function(list, sourceIndex) {
+        if (Array.isArray(list)) {
+          list.forEach(function(item) {
+            var id = item.id || item.title;
+            if (!seenIds[id]) {
+              seenIds[id] = true;
+              // 计算热度权重
+              item.hotScore = calculateHotScore(item.title, item.category);
+              allNews.push(item);
+            }
+          });
+        }
       });
 
+      // 按热度权重 + 时间排序
+      allNews.sort(function(a, b) {
+        var scoreA = (a.hotScore || 0) * 100 + (a.rawTime ? new Date(a.rawTime).getTime() : 0);
+        var scoreB = (b.hotScore || 0) * 100 + (b.rawTime ? new Date(b.rawTime).getTime() : 0);
+        return scoreB - scoreA;
+      });
+
+      // 取前20条
       var finalNews = allNews.slice(0, 20).map(function(item, i) {
         return {
           id: item.id || i,
           title: item.title || '',
           time: item.time || formatNewsTime(item.rawTime),
+          rawTime: item.rawTime,
           category: item.category || getCategoryFromTitle(item.title),
+          categoryText: getCategoryText(item.category || getCategoryFromTitle(item.title)),
           source: item.source || '未知',
-          isPin: i < 2
+          hotScore: item.hotScore || 0,
+          isHot: (item.hotScore || 0) >= 3,
+          isPin: i < 2,
+          relevance: getRelevanceLevel(item.hotScore || 0).value,
+          relevanceText: getRelevanceLevel(item.hotScore || 0).text
         };
       });
 
@@ -436,6 +473,71 @@ function getNewsFlash() {
   });
 }
 
+// 计算热点权重
+function calculateHotScore(title, category) {
+  if (!title) return 0;
+  var score = 1; // 基础分
+
+  // 类别权重
+  var categoryWeight = {
+    'policy': 3,   // 政策影响最大
+    'market': 2,   // 市场资金次之
+    'stock': 2,    // 板块个股
+    'tech': 2,     // 科技热点
+    'global': 1.5, // 国际市场
+    'company': 1,  // 公司财报
+    'macro': 2,    // 宏观
+    'general': 0.5
+  };
+  score += categoryWeight[category] || 1;
+
+  // 关键词加成
+  var text = title;
+  for (var type in HOT_KEYWORDS) {
+    for (var i = 0; i < HOT_KEYWORDS[type].length; i++) {
+      if (text.indexOf(HOT_KEYWORDS[type][i]) !== -1) {
+        score += 0.5;
+        break;
+      }
+    }
+  }
+
+  // 强烈情绪词加成
+  var emotionWords = ['暴涨', '暴跌', '涨停', '跌停', '重磅', '突发', '刚刚', '紧急', '史上', '首次', '创历史', '突破', '崩溃'];
+  for (var j = 0; j < emotionWords.length; j++) {
+    if (text.indexOf(emotionWords[j]) !== -1) {
+      score += 1;
+      break;
+    }
+  }
+
+  return Math.min(score, 10); // 最高10分
+}
+
+// 获取相关性等级
+function getRelevanceLevel(score) {
+  if (score >= 5) return { value: 'high', text: '高' };
+  if (score >= 3) return { value: 'medium', text: '中' };
+  if (score >= 1) return { value: 'low', text: '低' };
+  return { value: 'normal', text: '一般' };
+}
+
+// 获取类别人工文本
+function getCategoryText(category) {
+  var map = {
+    'policy': '政策',
+    'market': '市场',
+    'stock': '个股',
+    'tech': '科技',
+    'global': '国际',
+    'company': '公司',
+    'macro': '宏观',
+    'general': '综合'
+  };
+  return map[category] || category;
+}
+
+// 新浪财经快讯
 function getSinaNews() {
   return new Promise(function(resolve) {
     var url = 'https://zhibo.sina.com.cn/api/zhibo/feed?zhibo_id=152&page=1&page_size=20&tag_id=0&dire=f&dpc=1&pagesize=20';
@@ -454,13 +556,80 @@ function getSinaNews() {
             list = [];
           }
           resolve(list.map(function(item) {
+            var title = item.rich_text || item.text || '';
             return {
               id: 'sina_' + item.id,
-              title: item.rich_text || item.text || '',
+              title: title,
               rawTime: item.create_time,
               time: formatNewsTime(item.create_time),
-              category: getCategoryFromTitle(item.rich_text || item.text || ''),
+              category: getCategoryFromTitle(title),
               source: '新浪'
+            };
+          }));
+        } catch (e) {
+          resolve([]);
+        }
+      },
+      fail: function() { resolve([]); }
+    });
+  });
+}
+
+// 东方财富快讯
+function getEastmoneyNews() {
+  return new Promise(function(resolve) {
+    var url = 'https://np-listapi.eastmoney.com/comm/web/getFastNewsList?client=web&biz=web_financial&page=1&pageSize=10&startTime=&endTime=&order=0';
+
+    wx.request({
+      url: url,
+      method: 'GET',
+      timeout: 8000,
+      header: { 'Referer': 'https://www.eastmoney.com/' },
+      success: function(res) {
+        try {
+          var list = res.data.data.list || [];
+          resolve(list.map(function(item, i) {
+            var title = item.title || item.content || '';
+            return {
+              id: 'em_' + (item.id || i),
+              title: title,
+              rawTime: item.showtime || item.createTime,
+              time: formatNewsTime(item.showtime || item.createTime),
+              category: getCategoryFromTitle(title),
+              source: '东方财富'
+            };
+          }));
+        } catch (e) {
+          resolve([]);
+        }
+      },
+      fail: function() { resolve([]); }
+    });
+  });
+}
+
+// 腾讯财经快讯
+function getTencentNews() {
+  return new Promise(function(resolve) {
+    var url = 'https://finance.qq.com/headlineV1/headlineList?page=0&pageSize=10&token=5e2d3f3a3d2f3a2d3e2d3f3a&devid=5e2d3f3a3d2f3a2d&version=1.0.0';
+
+    wx.request({
+      url: url,
+      method: 'GET',
+      timeout: 8000,
+      header: { 'Referer': 'https://finance.qq.com/' },
+      success: function(res) {
+        try {
+          var list = res.data.articles || res.data.list || [];
+          resolve(list.map(function(item, i) {
+            var title = item.title || '';
+            return {
+              id: 'tx_' + i,
+              title: title,
+              rawTime: item.time || item.pubtime,
+              time: formatNewsTime(item.time || item.pubtime),
+              category: getCategoryFromTitle(title),
+              source: '腾讯财经'
             };
           }));
         } catch (e) {
@@ -474,14 +643,14 @@ function getSinaNews() {
 
 function getNewsFlashFallback() {
   return [
-    { id: 1, title: '央行开展1820亿元逆回购操作，当日实现净投放980亿元', time: '09:32', category: 'policy', source: '系统', isPin: true },
-    { id: 2, title: '北向资金净买入超50亿元，茅台、宁德时代获大额买入', time: '09:45', category: 'market', source: '系统', isPin: true },
-    { id: 3, title: '光伏板块异动拉升，TOPCon电池概念股集体涨停', time: '10:12', category: 'stock', source: '系统' },
-    { id: 4, title: '上证指数突破3300点，成交量放大至5000亿元', time: '10:28', category: 'market', source: '系统' },
-    { id: 5, title: '比亚迪发布新款车型，搭载最新智能驾驶系统', time: '11:05', category: 'company', source: '系统' },
-    { id: 6, title: '科创50指数涨超2%，半导体板块持续走强', time: '11:22', category: 'stock', source: '系统' },
-    { id: 7, title: '美团Q2财报超预期，营收同比增长32%', time: '11:45', category: 'company', source: '系统' },
-    { id: 8, title: '黄金价格突破2500美元/盎司，创历史新高', time: '12:08', category: 'commodity', source: '系统' }
+    { id: 1, title: '央行开展1820亿元逆回购操作，当日实现净投放980亿元', time: '09:32', category: 'policy', categoryText: '政策', source: '系统', isPin: true, hotScore: 5, isHot: true, relevance: 'high', relevanceText: '高' },
+    { id: 2, title: '北向资金净买入超50亿元，茅台、宁德时代获大额买入', time: '09:45', category: 'market', categoryText: '市场', source: '系统', isPin: true, hotScore: 4, isHot: true, relevance: 'high', relevanceText: '高' },
+    { id: 3, title: '光伏板块异动拉升，TOPCon电池概念股集体涨停', time: '10:12', category: 'stock', categoryText: '个股', source: '系统', hotScore: 4, isHot: true, relevance: 'medium', relevanceText: '中' },
+    { id: 4, title: '上证指数突破3300点，成交量放大至5000亿元', time: '10:28', category: 'market', categoryText: '市场', source: '系统', hotScore: 3, relevance: 'medium', relevanceText: '中' },
+    { id: 5, title: '比亚迪发布新款车型，搭载最新智能驾驶系统', time: '11:05', category: 'tech', categoryText: '科技', source: '系统', hotScore: 2, relevance: 'medium', relevanceText: '中' },
+    { id: 6, title: '科创50指数涨超2%，半导体板块持续走强', time: '11:22', category: 'stock', categoryText: '个股', source: '系统', hotScore: 3, relevance: 'medium', relevanceText: '中' },
+    { id: 7, title: '美团Q2财报超预期，营收同比增长32%', time: '11:45', category: 'company', categoryText: '公司', source: '系统', hotScore: 2, relevance: 'low', relevanceText: '低' },
+    { id: 8, title: '黄金价格突破2500美元/盎司，创历史新高', time: '12:08', category: 'global', categoryText: '国际', source: '系统', hotScore: 3, isHot: true, relevance: 'medium', relevanceText: '中' }
   ];
 }
 
@@ -1057,15 +1226,27 @@ function formatNewsTime(timeStr) {
 
 function getCategoryFromTitle(title) {
   if (!title) return 'general';
-  var policyKeywords = ['央行', '银保监', '证监会', '财政部', '政策', '降准', '加息'];
-  var marketKeywords = ['指数', '大盘', '成交', '涨跌'];
-  var companyKeywords = ['公司', '发布', 'Q2', '财报', '业绩'];
+  var policyKeywords = ['央行', '银保监', '证监会', '财政部', '政治局', '国务院', '降准', '降息', '加息', '量化宽松', '逆回购', 'LPR', 'MLF', 'SLF', '外汇', '汇率', '人民币', '美元', '美联署', '鲍威尔', '关税', '贸易战'];
+  var marketKeywords = ['北向资金', '主力资金', '净买入', '净卖出', '成交量', '万亿', '外资', '机构', '公募', '私募', 'ETF', '融资', '杠杆', '指数', '大盘', '上证', '深证', '创业板', '科创'];
+  var techKeywords = ['人工智能', 'AI', 'ChatGPT', '大模型', '英伟达', 'GPU', '算力', '芯片', '半导体', '光刻机', '华为', '苹果', '特斯拉', '新能源', '锂电', '固态电池', '机器人', '自动驾驶', '智能驾驶'];
+  var globalKeywords = ['美股', '纳斯达克', '道琼斯', '标普', '恒生', '日经', '欧股', '期货', '原油', '黄金', '比特币', '加密货币', '恐慌'];
+  var companyKeywords = ['财报', '业绩', '营收', '净利润', '超预期', '不及预期', '亏损', '盈利', 'Q1', 'Q2', 'Q3', 'Q4', '年报', '中报', '发布', '分红', '回购', '增持', '减持'];
+  var macroKeywords = ['经济', 'CPI', 'PPI', 'GDP', 'PMI', '消费', '投资', '出口', '进口', '房地产', '房价', '银行', '保险'];
 
   for (var i = 0; i < policyKeywords.length; i++) {
     if (title.indexOf(policyKeywords[i]) !== -1) return 'policy';
   }
+  for (var i = 0; i < techKeywords.length; i++) {
+    if (title.indexOf(techKeywords[i]) !== -1) return 'tech';
+  }
+  for (var i = 0; i < globalKeywords.length; i++) {
+    if (title.indexOf(globalKeywords[i]) !== -1) return 'global';
+  }
   for (var i = 0; i < marketKeywords.length; i++) {
     if (title.indexOf(marketKeywords[i]) !== -1) return 'market';
+  }
+  for (var i = 0; i < macroKeywords.length; i++) {
+    if (title.indexOf(macroKeywords[i]) !== -1) return 'macro';
   }
   for (var i = 0; i < companyKeywords.length; i++) {
     if (title.indexOf(companyKeywords[i]) !== -1) return 'company';

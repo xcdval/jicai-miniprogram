@@ -401,3 +401,601 @@
   background: rgba(241, 245, 249, 0.8);
   border-radius: 9999rpx;
 }
+
+.nav-btn.refreshing .refresh-icon {
+  animation: rotate 1s linear infinite;
+}
+
+/* 分段控制器 */
+.segment-control {
+  padding: 0 32rpx;
+  margin-bottom: 24rpx;
+}
+
+.segment-track {
+  display: flex;
+  position: relative;
+  background: #f1f5f9;
+  border-radius: 20rpx;
+  padding: 6rpx;
+}
+
+.segment-slider {
+  position: absolute;
+  top: 6rpx;
+  left: 6rpx;
+  width: calc(50% - 6rpx);
+  height: calc(100% - 12rpx);
+  background: #ffffff;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.segment-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 16rpx 24rpx;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.segment-icon {
+  font-size: 28rpx;
+}
+
+.segment-text {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #64748b;
+  transition: color 0.3s ease;
+}
+
+.segment-btn.active .segment-text {
+  color: #2563eb;
+}
+
+/* 视图切换 */
+.view-control {
+  padding: 0 32rpx;
+  margin-bottom: 24rpx;
+}
+
+.view-mode-tabs {
+  display: flex;
+  gap: 16rpx;
+}
+
+.view-tab {
+  padding: 12rpx 24rpx;
+  font-size: 26rpx;
+  color: #64748b;
+  background: #f1f5f9;
+  border-radius: 16rpx;
+  transition: all 0.3s ease;
+}
+
+.view-tab.active {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* 时间段选择器 */
+.time-range-tabs {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.range-tab {
+  padding: 8rpx 20rpx;
+  font-size: 24rpx;
+  color: #94a3b8;
+  background: transparent;
+  border-radius: 12rpx;
+  transition: all 0.3s ease;
+}
+
+.range-tab.active {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+}
+
+/* 图表卡片 */
+.chart-card {
+  background: #ffffff;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin: 0 32rpx 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid rgba(226, 232, 240, 0.8);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.chart-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.chart-subtitle {
+  font-size: 24rpx;
+  color: #94a3b8;
+}
+
+.chart-container {
+  height: 300rpx;
+  margin: 0 -12rpx;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 32rpx;
+  margin-top: 16rpx;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.legend-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+}
+
+.legend-text {
+  font-size: 24rpx;
+  color: #64748b;
+}
+
+/* 收益明细卡片 */
+.profit-detail-card {
+  background: #ffffff;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin: 0 32rpx 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid rgba(226, 232, 240, 0.8);
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f1f5f9;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  margin-right: 16rpx;
+}
+
+.detail-info {
+  flex: 1;
+}
+
+.detail-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.detail-date {
+  font-size: 22rpx;
+  color: #94a3b8;
+  margin-top: 4rpx;
+}
+
+.detail-value-group {
+  text-align: right;
+}
+
+.detail-value {
+  font-size: 28rpx;
+  font-weight: 700;
+  font-family: 'DIN Alternate', 'SF Mono', monospace;
+}
+
+.detail-value.positive { color: #ef4444; }
+.detail-value.negative { color: #10b981; }
+
+.detail-percent {
+  font-size: 22rpx;
+  font-weight: 600;
+  margin-top: 4rpx;
+}
+
+.detail-percent.positive { color: #ef4444; }
+.detail-percent.negative { color: #10b981; }
+
+/* 日历卡片 */
+.calendar-card {
+  background: #ffffff;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin: 0 32rpx 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid rgba(226, 232, 240, 0.8);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.calendar-nav {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  color: #64748b;
+  background: #f1f5f9;
+  border-radius: 16rpx;
+}
+
+.calendar-nav.disabled {
+  opacity: 0.4;
+}
+
+.calendar-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.period-tabs {
+  display: flex;
+  gap: 8rpx;
+  margin-bottom: 20rpx;
+}
+
+.period-tab {
+  flex: 1;
+  padding: 12rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: #64748b;
+  background: #f8fafc;
+  border-radius: 12rpx;
+}
+
+.period-tab.active {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.calendar-weekday-row {
+  display: flex;
+  margin-bottom: 12rpx;
+}
+
+.weekday {
+  flex: 1;
+  text-align: center;
+  font-size: 22rpx;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.calendar-day-row {
+  display: flex;
+}
+
+.calendar-day-cell {
+  flex: 1;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8rpx;
+  margin: 2rpx;
+}
+
+.calendar-day-cell.empty {
+  background: transparent;
+}
+
+.calendar-day-cell.today {
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.day-num {
+  font-size: 24rpx;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.day-profit {
+  font-size: 18rpx;
+  font-weight: 600;
+  margin-top: 4rpx;
+  font-family: 'DIN Alternate', monospace;
+}
+
+.day-profit.up { color: #ef4444; }
+.day-profit.down { color: #10b981; }
+
+/* 年视图 */
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+}
+
+.year-month-cell {
+  background: #f8fafc;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  text-align: center;
+}
+
+.year-month-cell.current {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(16, 185, 129, 0.1));
+  border: 2rpx solid var(--color-primary);
+}
+
+.year-month-label {
+  font-size: 24rpx;
+  color: #64748b;
+  display: block;
+}
+
+.year-month-value {
+  font-size: 26rpx;
+  font-weight: 700;
+  display: block;
+  margin-top: 8rpx;
+  font-family: 'DIN Alternate', monospace;
+}
+
+.year-month-value.up { color: #ef4444; }
+.year-month-value.down { color: #10b981; }
+
+/* 多年视图 */
+.years-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+}
+
+.years-year-cell {
+  background: #f8fafc;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  text-align: center;
+}
+
+.years-year-cell.current {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(16, 185, 129, 0.1));
+  border: 2rpx solid var(--color-primary);
+}
+
+.years-year-label {
+  font-size: 26rpx;
+  color: #64748b;
+  display: block;
+}
+
+.years-year-value {
+  font-size: 30rpx;
+  font-weight: 700;
+  display: block;
+  margin-top: 8rpx;
+  font-family: 'DIN Alternate', monospace;
+}
+
+.years-year-value.up { color: #ef4444; }
+.years-year-value.down { color: #10b981; }
+
+.calendar-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20rpx;
+}
+
+.display-toggle {
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  border-radius: 12rpx;
+  padding: 4rpx;
+}
+
+.toggle-btn {
+  padding: 8rpx 16rpx;
+  font-size: 24rpx;
+  color: #94a3b8;
+  border-radius: 8rpx;
+}
+
+.toggle-btn.active {
+  background: #ffffff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.toggle-divider {
+  color: #e2e8f0;
+}
+
+/* 收益排行卡片 */
+.rank-card {
+  background: #ffffff;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin: 0 32rpx 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid rgba(226, 232, 240, 0.8);
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f8fafc;
+}
+
+.rank-item:last-child {
+  border-bottom: none;
+}
+
+.rank-number {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 700;
+  margin-right: 16rpx;
+}
+
+.rank-info {
+  flex: 1;
+}
+
+.rank-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1e293b;
+  display: block;
+}
+
+.rank-type {
+  font-size: 22rpx;
+  color: #94a3b8;
+}
+
+.rank-profit {
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+}
+
+.rank-profit.positive { background: rgba(239, 68, 68, 0.1); }
+.rank-profit.negative { background: rgba(16, 185, 129, 0.1); }
+
+.rank-profit-value {
+  font-size: 26rpx;
+  font-weight: 700;
+  font-family: 'DIN Alternate', monospace;
+}
+
+.rank-profit.positive .rank-profit-value { color: #ef4444; }
+.rank-profit.negative .rank-profit-value { color: #10b981; }
+
+/* 日期详情弹窗 */
+.day-detail-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.day-detail-card {
+  background: #ffffff;
+  border-radius: 32rpx;
+  padding: 32rpx;
+  margin: 0 64rpx;
+  width: 100%;
+  max-width: 600rpx;
+}
+
+.day-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.day-detail-date {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.day-detail-close {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  color: #94a3b8;
+  background: #f1f5f9;
+  border-radius: 50%;
+}
+
+.day-detail-content {
+  display: flex;
+  gap: 32rpx;
+}
+
+.day-detail-item {
+  flex: 1;
+  text-align: center;
+}
+
+.day-detail-label {
+  font-size: 24rpx;
+  color: #94a3b8;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.day-detail-value {
+  font-size: 36rpx;
+  font-weight: 700;
+  font-family: 'DIN Alternate', monospace';
+}
+
+.day-detail-value.up { color: #ef4444; }
+.day-detail-value.down { color: #10b981; }
+
+/* 分析值样式 */
+.analysis-value {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #2563eb;
+  font-family: 'DIN Alternate', monospace';
+}
+
+.analysis-desc {
+  font-size: 24rpx;
+  color: #64748b;
+  margin-bottom: 12rpx;
+}

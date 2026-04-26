@@ -18,7 +18,7 @@
   <view class="total-asset-card">
     <view class="total-asset-header">
       <text class="total-asset-label">总资产（元）</text>
-      <view class="eye-icon" bindtap="toggleAmountVisibility">{{showAmount ? '👁️' : '🙈'}}</view>
+      <view class="eye-icon" bindtap="toggleAmountVisibility">{{showAmount ? '●' : '○'}}</view>
     </view>
     <view class="total-asset-main">
       <view class="total-asset-amount">{{showAmount ? '¥ 386,542.00' : '¥ ****'}}</view>
@@ -94,15 +94,8 @@
   </view>
 
   <!-- 市场快讯 -->
-  <view class="news-section">
-    <view class="section-header">
-      <text class="section-title">市场快讯</text>
-      <text class="section-more" bindtap="gotoIntelligence">更多 →</text>
-    </view>
-
-    <view class="news-card">
-      <news-flash newsList="{{newsFlash}}" bind:viewMore="gotoIntelligence"></news-flash>
-    </view>
+  <view class="news-card">
+    <news-flash newsList="{{newsFlash}}" bind:viewMore="gotoIntelligence"></news-flash>
   </view>
 </view>
 

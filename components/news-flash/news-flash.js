@@ -2,11 +2,18 @@ Component({
   properties: {
     newsList: {
       type: Array,
-      value: []
+      value: [],
+      observer: '_updateFilteredNews'
     },
     maxItems: {
       type: Number,
-      value: 5
+      value: 8
+    }
+  },
+
+  lifetimes: {
+    attached() {
+      this._updateFilteredNews();
     }
   },
 
@@ -14,37 +21,45 @@ Component({
     activeFilter: 'all',
     filters: [
       { label: '全部', value: 'all' },
+      { label: '政策', value: 'policy' },
       { label: '市场', value: 'market' },
-      { label: '宏观', value: 'macro' },
+      { label: '科技', value: 'tech' },
+      { label: '国际', value: 'global' },
       { label: '公司', value: 'company' }
     ],
     categoryMap: {
+      policy: '政策',
       market: '市场',
+      tech: '科技',
+      global: '国际',
+      company: '公司',
       macro: '宏观',
-      company: '公司'
-    }
+      general: '综合'
+    },
+    filteredNews: []
   },
 
-  computed: {
-    filteredNews() {
+  methods: {
+    _updateFilteredNews() {
       const { newsList, activeFilter, categoryMap, maxItems } = this.data;
-      let filtered = newsList;
+      let filtered = newsList || [];
 
       if (activeFilter !== 'all') {
         filtered = newsList.filter(item => item.category === activeFilter);
       }
 
-      return filtered.slice(0, maxItems).map(item => ({
+      const result = filtered.slice(0, maxItems).map(item => ({
         ...item,
         categoryText: categoryMap[item.category] || item.category
       }));
-    }
-  },
 
-  methods: {
+      this.setData({ filteredNews: result });
+    },
+
     onFilterTap(e) {
       const filter = e.currentTarget.dataset.filter;
       this.setData({ activeFilter: filter });
+      this._updateFilteredNews();
       this.triggerEvent('filterChange', { filter });
     },
 

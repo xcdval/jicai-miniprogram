@@ -1,18 +1,18 @@
 <view class="container">
   <!-- 状态栏 -->
   <view class="status-bar" style="height: {{statusBarHeight}}px;">
-    <text class="status-time">9:41</text>
+    <text class="status-time">{{lastUpdate}}</text>
     <text class="status-dots">●●●</text>
   </view>
 
   <!-- 导航栏 -->
   <view class="nav-bar" style="height: {{navBarHeight}}px;">
-    <view class="nav-btn" bindtap="goBack">‹</view>
-    <view class="nav-title">持仓分析</view>
-    <view class="nav-btn" bindtap="refreshData">↻</view>
+    <view class="nav-btn" style="visibility: hidden;">‹</view>
+    <view class="nav-title">综合分析</view>
+    <view class="nav-btn {{isRefreshing ? 'refreshing' : ''}}" bindtap="refreshData">↻</view>
   </view>
 
-  <!-- 统计概览卡片 -->
+  <!-- 统计概览卡片 - 两个Tab共用 -->
   <view class="stats-overview-card">
     <view class="stats-grid">
       <view class="stats-item {{stats.totalReturn >= 0 ? 'positive' : 'negative'}}">
@@ -32,9 +32,8 @@
         <text class="stats-label">收益率</text>
       </view>
       <view class="stats-divider"></view>
-      <view class="stats-item {{stats.maxDrawdown >= 0 ? 'positive' : 'negative'}}">
-        <view class="stats-value-container">
-          <text class="stats-sign">{{stats.maxDrawdown >= 0 ? '+' : ''}}</text>
+      <view class="stats-item">
+        <view class="stats-value-container" style="color: #64748b;">
           <text class="stats-number">{{stats.maxDrawdown}}</text>
           <text class="stats-unit">%</text>
         </view>
@@ -43,81 +42,335 @@
     </view>
   </view>
 
-  <!-- 持仓健康度评分 -->
-  <view class="health-score-card">
-    <view class="health-circle" style="border-color: {{healthColor}};">
-      <view class="health-score" style="color: {{healthColor}};">{{healthScore}}</view>
+  <!-- 分段切换控制器 -->
+  <view class="segment-control">
+    <view class="segment-track">
+      <view class="segment-slider" style="transform: translateX({{activeTab === 'position' ? 0 : 100}}%);"></view>
+      <view class="segment-btn {{activeTab === 'position' ? 'active' : ''}}" bindtap="switchTab" data-tab="position">
+        <text class="segment-icon">📊</text>
+        <text class="segment-text">持仓分析</text>
+      </view>
+      <view class="segment-btn {{activeTab === 'profit' ? 'active' : ''}}" bindtap="switchTab" data-tab="profit">
+        <text class="segment-icon">📈</text>
+        <text class="segment-text">收益分析</text>
+      </view>
     </view>
-    <view class="health-label">持仓健康度评分</view>
-    <view class="health-desc">0-100分，分数越高越健康</view>
   </view>
 
-  <!-- 资产配置 - 参考首页设计 -->
-  <view class="section-title">资产配置</view>
-  <view class="asset-allocation-card">
-    <view class="allocation-main">
-      <!-- 左侧饼图 -->
-      <view class="allocation-pie">
-        <view class="pie-circle" style="background: conic-gradient({{conicGradient}});"></view>
+  <!-- ==================== 持仓分析内容 ==================== -->
+  <view wx:if="{{activeTab === 'position'}}">
+    <!-- 持仓健康度评分 -->
+    <view class="health-score-card">
+      <view class="health-circle" style="border-color: {{healthColor}};">
+        <view class="health-score" style="color: {{healthColor}};">{{healthScore}}</view>
       </view>
-      <!-- 右侧图例 -->
-      <view class="allocation-legend">
-        <view class="legend-item" wx:for="{{assetAllocationData}}" wx:key="name">
-          <view class="legend-dot" style="background: {{item.color}};"></view>
-          <text class="legend-name">{{item.name}}</text>
-          <text class="legend-percent">{{item.percent}}%</text>
-          <text class="legend-value">{{item.valueText}}</text>
+      <view class="health-label">持仓健康度评分</view>
+      <view class="health-desc">0-100分，分数越高越健康</view>
+    </view>
+
+    <!-- 资产配置 -->
+    <view class="section-title">资产配置</view>
+    <view class="asset-allocation-card">
+      <view class="allocation-main">
+        <view class="allocation-pie">
+          <view class="pie-circle" style="background: conic-gradient({{conicGradient}});"></view>
+        </view>
+        <view class="allocation-legend">
+          <view class="legend-item" wx:for="{{assetAllocationData}}" wx:key="name">
+            <view class="legend-dot" style="background: {{item.color}};"></view>
+            <text class="legend-name">{{item.name}}</text>
+            <text class="legend-percent">{{item.percent}}%</text>
+            <text class="legend-value">{{item.valueText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 持仓分析 -->
+    <view class="section-title">持仓分析</view>
+    <view class="analysis-card">
+      <view class="analysis-item">
+        <view class="analysis-header">
+          <text class="analysis-name">行业集中度</text>
+          <text class="analysis-level {{concentrationLevel === '较高' ? 'warning' : 'success'}}">{{concentrationLevel}}</text>
+        </view>
+        <view class="analysis-bar">
+          <view class="analysis-progress" style="width: {{concentrationValue}}%; background: {{concentrationLevel === '较高' ? '#f59e0b' : '#10b981'}};"></view>
+        </view>
+        <view class="analysis-tip">{{concentrationTip}}</view>
+      </view>
+
+      <view class="analysis-item">
+        <view class="analysis-header">
+          <text class="analysis-name">持仓重叠度</text>
+          <text class="analysis-level {{overlapLevel === '低' ? 'success' : 'warning'}}">{{overlapLevel}}</text>
+        </view>
+        <view class="analysis-bar">
+          <view class="analysis-progress" style="width: {{overlapValue}}%; background: {{overlapLevel === '低' ? '#10b981' : '#f59e0b'}};"></view>
+        </view>
+        <view class="analysis-tip">{{overlapTip}}</view>
+      </view>
+    </view>
+
+    <!-- 行业分布 -->
+    <view class="section-title">行业分布</view>
+    <view class="industry-card">
+      <view class="industry-list">
+        <view class="industry-item" wx:for="{{industryData}}" wx:key="name">
+          <view class="industry-color" style="background: {{item.color}};"></view>
+          <text class="industry-name">{{item.name}}</text>
+          <text class="industry-percent">{{item.value}}%</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 优化建议 -->
+    <view class="section-title">优化建议</view>
+    <view class="suggestion-card">
+      <view class="suggestion-title">{{suggestions.length > 0 ? suggestions[0].title : '暂无建议'}}</view>
+      <view class="suggestion-content">{{suggestions.length > 0 ? suggestions[0].content : '您的持仓状况良好，继续保持！'}}</view>
+    </view>
+  </view>
+
+  <!-- ==================== 收益分析内容 ==================== -->
+  <view wx:if="{{activeTab === 'profit'}}">
+    <!-- 视图切换 -->
+    <view class="view-control">
+      <view class="view-mode-tabs">
+        <view class="view-tab {{viewMode === item.key ? 'active' : ''}}"
+              wx:for="{{viewModes}}"
+              wx:key="key"
+              data-mode="{{item.key}}"
+              bindtap="switchViewMode">
+          {{item.name}}
+        </view>
+      </view>
+    </view>
+
+    <!-- 收益曲线视图 -->
+    <block wx:if="{{viewMode === 'chart'}}">
+      <view class="chart-card">
+        <view class="chart-header">
+          <text class="chart-title">收益走势图</text>
+          <text class="chart-subtitle">{{currentRangeName}}</text>
+        </view>
+        <view class="chart-container">
+          <profit-line data="{{profitTrendData}}" type="profit"></profit-line>
+        </view>
+        <view class="chart-legend">
+          <view class="legend-item">
+            <view class="legend-dot" style="background: #2563eb;"></view>
+            <text class="legend-text">累计收益</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-title">收益明细</view>
+      <view class="profit-detail-card">
+        <view class="detail-item">
+          <view class="detail-icon" style="background: rgba(37, 99, 235, 0.1);">¥</view>
+          <view class="detail-info">
+            <text class="detail-name">今日收益</text>
+            <text class="detail-date">{{todayDate}}</text>
+          </view>
+          <view class="detail-value-group">
+            <view class="detail-value {{todayProfit >= 0 ? 'positive' : 'negative'}}">
+              {{todayProfit >= 0 ? '+' : ''}}{{todayProfitText}}
+            </view>
+            <view class="detail-percent {{todayProfit >= 0 ? 'positive' : 'negative'}}">
+              {{todayProfitPercent >= 0 ? '+' : ''}}{{todayProfitPercent}}%
+            </view>
+          </view>
+        </view>
+        <view class="detail-item">
+          <view class="detail-icon" style="background: rgba(245, 158, 11, 0.1);">¥</view>
+          <view class="detail-info">
+            <text class="detail-name">本月收益</text>
+            <text class="detail-date">{{monthDateRange}}</text>
+          </view>
+          <view class="detail-value-group">
+            <view class="detail-value {{monthProfit >= 0 ? 'positive' : 'negative'}}">
+              {{monthProfit >= 0 ? '+' : ''}}{{monthProfitText}}
+            </view>
+            <view class="detail-percent {{monthProfit >= 0 ? 'positive' : 'negative'}}">
+              {{monthProfitPercent >= 0 ? '+' : ''}}{{monthProfitPercent}}%
+            </view>
+          </view>
+        </view>
+        <view class="detail-item">
+          <view class="detail-icon" style="background: rgba(139, 92, 246, 0.1);">¥</view>
+          <view class="detail-info">
+            <text class="detail-name">本年收益</text>
+            <text class="detail-date">{{yearDateRange}}</text>
+          </view>
+          <view class="detail-value-group">
+            <view class="detail-value {{yearProfit >= 0 ? 'positive' : 'negative'}}">
+              {{yearProfit >= 0 ? '+' : ''}}{{yearProfitText}}
+            </view>
+            <view class="detail-percent {{yearProfit >= 0 ? 'positive' : 'negative'}}">
+              {{yearProfitPercent >= 0 ? '+' : ''}}{{yearProfitPercent}}%
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 收益日历视图 -->
+    <block wx:if="{{viewMode === 'calendar'}}">
+      <view class="calendar-card">
+        <view class="calendar-header">
+          <view class="calendar-nav {{calendarPeriodMode === 'years' ? 'disabled' : ''}}" bindtap="prevPeriod">‹</view>
+          <text class="calendar-title" bindtap="tapCalendarTitle">{{calendarPeriodMode === 'month' ? calendarMonth : calendarPeriodMode === 'year' ? calendarYear + '年' : '近5年'}}</text>
+          <view class="calendar-nav {{calendarPeriodMode === 'years' ? 'disabled' : ''}}" bindtap="nextPeriod">›</view>
+        </view>
+
+        <view class="period-tabs">
+          <view class="period-tab {{calendarPeriodMode === item.key ? 'active' : ''}}"
+                wx:for="{{calendarPeriodModes}}"
+                wx:key="key"
+                data-mode="{{item.key}}"
+                bindtap="switchCalendarPeriodMode">
+            {{item.name}}
+          </view>
+        </view>
+
+        <!-- 月视图 -->
+        <block wx:if="{{calendarPeriodMode === 'month'}}">
+          <view class="month-calendar-grid">
+            <view class="calendar-weekday-row">
+              <text class="weekday">一</text>
+              <text class="weekday">二</text>
+              <text class="weekday">三</text>
+              <text class="weekday">四</text>
+              <text class="weekday">五</text>
+              <text class="weekday">六</text>
+              <text class="weekday">日</text>
+            </view>
+            <view class="calendar-days-container">
+              <view class="calendar-day-row" wx:for="{{calendarWeeks}}" wx:key="index">
+                <view class="calendar-day-cell {{day.empty ? 'empty' : ''}} {{day.isToday ? 'today' : ''}}"
+                      wx:for="{{item.days}}"
+                      wx:for-item="day"
+                      wx:key="day"
+                      bindtap="tapCalendarDay"
+                      data-date="{{day.dateStr}}">
+                  <text class="day-num" wx:if="{{!day.empty}}">{{day.day}}</text>
+                  <text class="day-profit {{day.profit >= 0 ? 'up' : 'down'}}" wx:if="{{!day.empty && day.profit !== undefined}}">
+                    {{calendarDisplayMode === 'profit' ? '¥' : ''}}{{day.profit >= 0 ? '+' : ''}}{{calendarDisplayMode === 'profit' ? day.profit : day.percent}}{{calendarDisplayMode === 'profit' ? '' : '%'}}
+                  </text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </block>
+
+        <!-- 年视图 -->
+        <block wx:if="{{calendarPeriodMode === 'year'}}">
+          <view class="year-grid">
+            <view class="year-month-cell {{item.isCurrentMonth ? 'current' : ''}}"
+                  wx:for="{{yearData}}"
+                  wx:key="month"
+                  bindtap="tapYearMonth"
+                  data-month="{{item.month}}">
+              <text class="year-month-label">{{item.month}}月</text>
+              <text class="year-month-value {{item.profit >= 0 ? 'up' : 'down'}}">
+                {{calendarDisplayMode === 'profit' ? '¥' : ''}}{{item.profit >= 0 ? '+' : ''}}{{calendarDisplayMode === 'profit' ? item.profit : item.percent}}{{calendarDisplayMode === 'profit' ? '' : '%'}}
+              </text>
+            </view>
+          </view>
+        </block>
+
+        <!-- 多年视图 -->
+        <block wx:if="{{calendarPeriodMode === 'years'}}">
+          <view class="years-grid">
+            <view class="years-year-cell {{item.isCurrentYear ? 'current' : ''}}"
+                  wx:for="{{yearsData}}"
+                  wx:key="year"
+                  bindtap="tapYearsYear"
+                  data-year="{{item.year}}">
+              <text class="years-year-label">{{item.year}}年</text>
+              <text class="years-year-value {{item.profit >= 0 ? 'up' : 'down'}}">
+                {{calendarDisplayMode === 'profit' ? '¥' : ''}}{{item.profit >= 0 ? '+' : ''}}{{calendarDisplayMode === 'profit' ? item.profit : item.percent}}{{calendarDisplayMode === 'profit' ? '' : '%'}}
+              </text>
+            </view>
+          </view>
+        </block>
+
+        <view class="calendar-footer">
+          <view class="display-toggle" bindtap="toggleCalendarDisplayMode">
+            <text class="toggle-btn {{calendarDisplayMode === 'profit' ? 'active' : ''}}">¥</text>
+            <text class="toggle-divider">/</text>
+            <text class="toggle-btn {{calendarDisplayMode === 'percent' ? 'active' : ''}}">%</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 收益分析指标 -->
+    <view class="section-title">收益分析</view>
+    <view class="analysis-card">
+      <view class="analysis-item">
+        <view class="analysis-header">
+          <text class="analysis-name">夏普比率</text>
+          <text class="analysis-value">{{stats.sharpeRatio}}</text>
+        </view>
+        <view class="analysis-desc">衡量风险调整后的收益表现，越高越好</view>
+        <view class="analysis-bar">
+          <view class="analysis-progress" style="width: {{sharpePercent}}%; background: linear-gradient(90deg, #2563eb, #10b981);"></view>
+        </view>
+      </view>
+      <view class="analysis-item">
+        <view class="analysis-header">
+          <text class="analysis-name">波动率</text>
+          <text class="analysis-value">{{stats.volatility}}%</text>
+        </view>
+        <view class="analysis-desc">反映资产价格波动程度，越低越稳定</view>
+        <view class="analysis-bar">
+          <view class="analysis-progress" style="width: {{volatilityPercent}}%; background: linear-gradient(90deg, #f59e0b, #ef4444);"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 资产收益排行 -->
+    <view class="section-title">资产收益排行</view>
+    <view class="rank-card">
+      <view class="rank-item" wx:for="{{profitRank}}" wx:key="name">
+        <view class="rank-number" style="background: {{index < 3 ? ['#fbbf24', '#94a3b8', '#b45309'][index] : '#e2e8f0'}}; color: {{index < 3 ? '#fff' : '#64748b'}};">{{index + 1}}</view>
+        <view class="rank-info">
+          <text class="rank-name">{{item.name}}</text>
+          <text class="rank-type">{{item.type}}</text>
+        </view>
+        <view class="rank-profit {{item.profit >= 0 ? 'positive' : 'negative'}}">
+          <text class="rank-profit-value">{{item.profit >= 0 ? '+' : ''}}{{item.profit}}%</text>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 持仓分析 -->
-  <view class="section-title">持仓分析</view>
-  <view class="analysis-card">
-    <view class="analysis-item">
-      <view class="analysis-header">
-        <text class="analysis-name">行业集中度</text>
-        <text class="analysis-level {{concentrationLevel === '较高' ? 'warning' : 'success'}}">{{concentrationLevel}}</text>
-      </view>
-      <view class="analysis-bar">
-        <view class="analysis-progress" style="width: {{concentrationValue}}%; background: {{concentrationLevel === '较高' ? '#f59e0b' : '#10b981'}};"></view>
-      </view>
-      <view class="analysis-tip">{{concentrationTip}}</view>
-    </view>
+  <view class="btn-primary" bindtap="viewDetailReport">查看详细{{activeTab === 'position' ? '诊断' : '收益'}}报告</view>
 
-    <view class="analysis-item">
-      <view class="analysis-header">
-        <text class="analysis-name">持仓重叠度</text>
-        <text class="analysis-level {{overlapLevel === '低' ? 'success' : 'warning'}}">{{overlapLevel}}</text>
+  <!-- 日期详情弹窗 -->
+  <view class="day-detail-mask" wx:if="{{selectedProfitDetail}}" bindtap="closeDayDetail">
+    <view class="day-detail-card" catchtap="preventBubble">
+      <view class="day-detail-header">
+        <text class="day-detail-date">{{selectedProfitDetail.title}}</text>
+        <view class="day-detail-close" bindtap="closeDayDetail">×</view>
       </view>
-      <view class="analysis-bar">
-        <view class="analysis-progress" style="width: {{overlapValue}}%; background: {{overlapLevel === '低' ? '#10b981' : '#f59e0b'}};"></view>
-      </view>
-      <view class="analysis-tip">{{overlapTip}}</view>
-    </view>
-  </view>
-
-  <!-- 行业分布 -->
-  <view class="section-title">行业分布</view>
-  <view class="industry-card">
-    <view class="industry-list">
-      <view class="industry-item" wx:for="{{industryData}}" wx:key="name">
-        <view class="industry-color" style="background: {{item.color}};"></view>
-        <text class="industry-name">{{item.name}}</text>
-        <text class="industry-percent">{{item.value}}%</text>
+      <view class="day-detail-content">
+        <view class="day-detail-item">
+          <text class="day-detail-label">{{selectedProfitDetail.type === 'day' ? '当日' : selectedProfitDetail.type === 'month' ? '当月' : selectedProfitDetail.type === 'year' ? '当年' : '近5年'}}收益</text>
+          <text class="day-detail-value {{selectedProfitDetail.profit >= 0 ? 'up' : 'down'}}">
+            ¥{{selectedProfitDetail.profit >= 0 ? '+' : ''}}{{selectedProfitDetail.profit}}
+          </text>
+        </view>
+        <view class="day-detail-item">
+          <text class="day-detail-label">收益率</text>
+          <text class="day-detail-value {{selectedProfitDetail.percent >= 0 ? 'up' : 'down'}}">
+            {{selectedProfitDetail.percent >= 0 ? '+' : ''}}{{selectedProfitDetail.percent}}%
+          </text>
+        </view>
       </view>
     </view>
   </view>
-
-  <!-- 优化建议 -->
-  <view class="section-title">优化建议</view>
-  <view class="suggestion-card">
-    <view class="suggestion-title">降低白酒行业集中度</view>
-    <view class="suggestion-content">建议将部分白酒仓位转换到科技、医疗等行业基金，分散投资风险</view>
-  </view>
-
-  <!-- 查看详细报告按钮 -->
-  <view class="btn-primary" bindtap="viewDetailReport">查看详细诊断报告</view>
 </view>
 <tab-bar activeIndex="3"></tab-bar>

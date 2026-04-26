@@ -19,58 +19,45 @@
     <text>加载中...</text>
   </view>
 
-  <!-- 时段切换标签 -->
-  <view class="intelligence-tabs-card">
-    <view class="intelligence-tabs">
-      <view class="intelligence-tab {{activePhase === 'morning' ? 'active' : ''}}" data-phase="morning" bindtap="switchPhase">
-        <view class="tab-icon-small">🌅</view>
-        <view class="tab-content">
-          <view class="tab-title">早盘情报</view>
-          <view class="tab-time">09:15前</view>
-        </view>
-      </view>
-      <view class="intelligence-tab {{activePhase === 'intraday' ? 'active' : ''}}" data-phase="intraday" bindtap="switchPhase">
-        <view class="tab-icon-small">☀️</view>
-        <view class="tab-content">
-          <view class="tab-title">盘中分析</view>
-          <view class="tab-time">09:30-15:00</view>
-        </view>
-      </view>
-      <view class="intelligence-tab {{activePhase === 'closing' ? 'active' : ''}}" data-phase="closing" bindtap="switchPhase">
-        <view class="tab-icon-small">🌙</view>
-        <view class="tab-content">
-          <view class="tab-title">盘后复盘</view>
-          <view class="tab-time">15:00后</view>
-        </view>
-      </view>
-    </view>
+  <!-- 非开盘日提示 -->
+  <view wx:if="{{!isTradingDay}}" class="holiday-banner">
+    <text class="holiday-icon">📅</text>
+    <text class="holiday-text">今日非开盘日</text>
+    <text class="holiday-date" wx:if="{{lastTradingDay}}">上次复盘：{{lastTradingDay}}</text>
   </view>
 
-  <!-- 早盘情报内容 -->
+  <!-- 当前时段指示器 -->
+  <view class="phase-indicator" wx:if="{{isTradingDay}}">
+    <text class="phase-icon">{{activePhase === 'morning' ? '🌅' : activePhase === 'intraday' ? '☀️' : '🌙'}}</text>
+    <text class="phase-text">{{activePhase === 'morning' ? '早盘情报' : activePhase === 'intraday' ? '盘中分析' : '盘后复盘'}}</text>
+    <text class="phase-time-hint">{{activePhase === 'morning' ? '09:15前' : activePhase === 'intraday' ? '09:30-15:00' : '15:00后'}}</text>
+  </view>
+
+  <!-- ==================== 早盘情报 - 预判为主 ==================== -->
   <view wx:if="{{activePhase === 'morning'}}">
-    <!-- AI决策仪表盘 -->
+    <!-- AI决策仪表盘 - 早盘核心 -->
     <view class="ai-dashboard">
       <view class="ai-dashboard-header">
         <view class="ai-badge">AI 智能决策</view>
-        <view class="ai-update-time">基于多维度数据分析</view>
+        <view class="ai-update-time">开盘前预判</view>
       </view>
-      <view class="ai-conclusion">{{aiData.conclusion}}</view>
+      <view class="ai-conclusion">{{aiData.conclusion || '数据加载中...'}}</view>
       <view class="ai-signals">
         <view class="signal-item">
           <view class="signal-label">大盘方向</view>
-          <view class="signal-value {{aiData.direction === '看多' ? 'signal-buy' : aiData.direction === '看空' ? 'signal-sell' : 'signal-hold'}}">{{aiData.direction}} {{aiData.direction === '看多' ? '↑' : aiData.direction === '看空' ? '↓' : '→'}}</view>
+          <view class="signal-value {{aiData.direction === '看多' ? 'signal-buy' : aiData.direction === '看空' ? 'signal-sell' : 'signal-hold'}}">{{aiData.direction || '--'}} {{aiData.direction === '看多' ? '↑' : aiData.direction === '看空' ? '↓' : '→'}}</view>
         </view>
         <view class="signal-item">
           <view class="signal-label">操作建议</view>
-          <view class="signal-value signal-hold">{{aiData.suggestion}}</view>
+          <view class="signal-value signal-hold">{{aiData.suggestion || '--'}}</view>
         </view>
         <view class="signal-item">
-          <view class="signal-label">目标仓位</view>
-          <view class="signal-value">{{aiData.targetPosition}}</view>
+          <view class="signal-label">建议仓位</view>
+          <view class="signal-value">{{aiData.targetPosition || '--'}}</view>
         </view>
       </view>
       <view class="ai-risk-warning" wx:if="{{aiData.riskWarning}}">
-        <text class="risk-icon">⚠️</text>
+        <text class="risk-icon">!</text>
         <text class="risk-text">{{aiData.riskWarning}}</text>
       </view>
       <view class="ai-key-levels" wx:if="{{aiData.keyLevels}}">
@@ -83,16 +70,12 @@
           <text class="level-value resistance">{{aiData.keyLevels.resistance || '--'}}</text>
         </view>
       </view>
-      <view class="ai-checklist">
-        <view class="checklist-title">📋 操作 checklist</view>
-        <view class="checklist-item {{item.done ? 'checked' : ''}}" wx:for="{{aiData.checklist}}" wx:key="text">{{item.text}}</view>
-      </view>
     </view>
 
     <!-- 行业板块涨幅榜 -->
     <view class="sector-performance-card" wx:if="{{sectorPerformance.industrySectors.length > 0}}">
       <view class="sector-card-header">
-        <text class="sector-card-title">📈 行业板块涨幅榜</text>
+        <text class="sector-card-title">行业板块涨幅榜</text>
       </view>
       <view class="sector-list">
         <view class="sector-item" wx:for="{{sectorPerformance.industrySectors}}" wx:key="code">
@@ -105,7 +88,7 @@
     <!-- AI推荐关注板块 -->
     <view class="hot-sectors-card" wx:if="{{aiData.hotSectors && aiData.hotSectors.length > 0}}">
       <view class="hot-card-header">
-        <text class="hot-card-title">🔥 AI推荐关注板块</text>
+        <text class="hot-card-title">AI推荐关注板块</text>
       </view>
       <view class="hot-tags">
         <view class="hot-tag" wx:for="{{aiData.hotSectors}}" wx:key="index">{{item}}</view>
@@ -115,7 +98,7 @@
     <!-- 全球市场概览 -->
     <view class="global-markets-card">
       <view class="card-header-row">
-        <text class="card-title-text">🌍 全球市场概览</text>
+        <text class="card-title-text">全球市场概览</text>
         <text class="card-update-time">实时更新</text>
       </view>
       <view class="global-markets">
@@ -125,21 +108,71 @@
           <view class="market-change-mini {{item.changePercent >= 0 ? 'rise' : 'fall'}}">{{item.changePercent}}%</view>
         </view>
       </view>
-      <view class="data-sources">
-        <text class="source-tag">Yahoo Finance</text>
-        <text class="source-tag">Bloomberg</text>
-        <text class="source-tag">东方财富</text>
+    </view>
+
+    <!-- 操作checklist -->
+    <view class="ai-checklist-card" wx:if="{{aiData.checklist && aiData.checklist.length > 0}}">
+      <view class="checklist-title">今日操作 checklist</view>
+      <view class="checklist-item {{item.done ? 'checked' : ''}}" wx:for="{{aiData.checklist}}" wx:key="text">{{item.text}}</view>
+    </view>
+  </view>
+
+  <!-- ==================== 盘中分析 - 实时监控 ==================== -->
+  <view wx:if="{{activePhase === 'intraday'}}">
+    <!-- 实时行情概览 -->
+    <view class="ai-dashboard">
+      <view class="ai-dashboard-header">
+        <view class="ai-badge">盘中实时</view>
+        <view class="ai-update-time">数据实时更新</view>
+      </view>
+      <view class="ai-conclusion">{{aiData.conclusion || '盘中分析中...'}}</view>
+      <view class="ai-signals">
+        <view class="signal-item">
+          <view class="signal-label">当前态势</view>
+          <view class="signal-value">{{sentiment.level || '分析中'}}</view>
+        </view>
+        <view class="signal-item">
+          <view class="signal-label">操作建议</view>
+          <view class="signal-value signal-hold">{{aiData.suggestion || '观望'}}</view>
+        </view>
+        <view class="signal-item">
+          <view class="signal-label">市场情绪</view>
+          <view class="signal-value {{sentiment.value >= 50 ? 'signal-buy' : 'signal-sell'}}">{{sentiment.value || '--'}}</view>
+        </view>
       </view>
     </view>
 
-    <!-- 市场情绪仪表盘 -->
+    <!-- 今日概况 -->
+    <view class="closing-summary-card">
+      <view class="summary-header">
+        <text class="summary-title">今日概况</text>
+      </view>
+      <view class="summary-grid">
+        <view class="summary-col">
+          <view class="summary-label">上涨</view>
+          <view class="summary-value rise">{{upCount || 0}}只</view>
+        </view>
+        <view class="summary-divider"></view>
+        <view class="summary-col">
+          <view class="summary-label">下跌</view>
+          <view class="summary-value fall">{{downCount || 0}}只</view>
+        </view>
+        <view class="summary-divider"></view>
+        <view class="summary-col">
+          <view class="summary-label">涨跌比</view>
+          <view class="summary-value {{upDownRatio >= 50 ? 'rise' : 'fall'}}">{{upDownRatio || 50}}%</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 市场情绪 -->
     <view class="sentiment-gauge">
       <view class="gauge-header">
-        <view class="gauge-title">📊 市场情绪指数</view>
-        <view class="gauge-value {{sentiment.value >= 60 ? 'gauge-greed' : 'gauge-fear'}}">{{sentiment.value}} - {{sentiment.level}}</view>
+        <view class="gauge-title">盘中情绪</view>
+        <view class="gauge-value {{sentiment.value >= 60 ? 'gauge-greed' : 'gauge-fear'}}">{{sentiment.value || 50}} - {{sentiment.level || '中性'}}</view>
       </view>
       <view class="gauge-bar">
-        <view class="gauge-marker" style="left: {{sentiment.value}}%;"></view>
+        <view class="gauge-marker" style="left: {{sentiment.value || 50}}%;"></view>
       </view>
       <view class="gauge-labels">
         <text>极度恐惧</text>
@@ -148,230 +181,116 @@
         <text>贪婪</text>
         <text>极度贪婪</text>
       </view>
-      <view class="sentiment-factors">
-        <view class="factor-item">
-          <text class="factor-name">VIX波动率</text>
-          <text class="factor-value {{sentiment.factors.volatility > 20 ? 'fall' : 'rise'}}">{{sentiment.factors.volatility}}</text>
-        </view>
-        <view class="factor-item">
-          <text class="factor-name">恐惧贪婪</text>
-          <text class="factor-value rise">{{sentiment.factors.fearGreed}}</text>
-        </view>
-        <view class="factor-item">
-          <text class="factor-name">涨跌比</text>
-          <text class="factor-value rise">{{sentiment.factors.advanceDecline}}</text>
-        </view>
-        <view class="factor-item">
-          <text class="factor-name">期权PCR</text>
-          <text class="factor-value rise">{{sentiment.factors.pcr}}</text>
-        </view>
-      </view>
     </view>
 
-    <!-- 市场开盘倒计时 -->
-    <view class="flash-header">
-      <view class="flash-live-indicator">
-        <view class="live-dot"></view>
-        <text class="live-text">实时快讯</text>
-      </view>
-    </view>
-
-    <!-- 置顶重要信息 -->
-    <view class="flash-pin" wx:for="{{newsFlash}}" wx:key="id" wx:if="{{item.isPin && index < 2}}">
-      <view class="pin-tag">置顶</view>
-      <view class="pin-content">
-        <view class="pin-title">{{item.title}}</view>
-        <view class="pin-meta">
-          <text class="tag tag-{{item.category}}">{{item.category}}</text>
-          <text class="time">{{item.time}}</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 资金流向 -->
+    <!-- 资金动向 -->
     <view class="fund-flow-section">
       <view class="flow-header">
-        <view class="flow-title">💰 资金流向</view>
-        <view class="flow-subtitle">实时主力净流入</view>
+        <view class="flow-title">资金动向</view>
+        <view class="flow-subtitle">实时资金流向</view>
       </view>
       <view class="flow-grid">
         <view class="flow-item">
           <view class="flow-label">北向资金</view>
-          <view class="flow-amount {{fundFlow.northFlow >= 0 ? 'flow-in' : 'flow-out'}}">{{fundFlow.northFlow >= 0 ? '+' : ''}}{{fundFlow.northFlow}}亿</view>
+          <view class="flow-amount {{fundFlow.northFlow >= 0 ? 'flow-in' : 'flow-out'}}">{{fundFlow.northFlow >= 0 ? '+' : ''}}{{fundFlow.northFlow || 0}}亿</view>
         </view>
         <view class="flow-item">
           <view class="flow-label">主力资金</view>
-          <view class="flow-amount {{fundFlow.mainFlow >= 0 ? 'flow-in' : 'flow-out'}}">{{fundFlow.mainFlow >= 0 ? '+' : ''}}{{fundFlow.mainFlow}}亿</view>
-        </view>
-        <view class="flow-item">
-          <view class="flow-label">散户资金</view>
-          <view class="flow-amount {{fundFlow.retailFlow >= 0 ? 'flow-in' : 'flow-out'}}">{{fundFlow.retailFlow >= 0 ? '+' : ''}}{{fundFlow.retailFlow}}亿</view>
-        </view>
-        <view class="flow-item">
-          <view class="flow-label">融资余额</view>
-          <view class="flow-amount {{fundFlow.marginBalance >= 0 ? 'flow-in' : 'flow-out'}}">{{fundFlow.marginBalance >= 0 ? '+' : ''}}{{fundFlow.marginBalance}}亿</view>
+          <view class="flow-amount {{fundFlow.mainFlow >= 0 ? 'flow-in' : 'flow-out'}}">{{fundFlow.mainFlow >= 0 ? '+' : ''}}{{fundFlow.mainFlow || 0}}亿</view>
         </view>
       </view>
     </view>
 
-    <!-- 分类信息展示 -->
-    <view class="section-title">分类资讯</view>
-    <view class="category-grid">
-      <view class="category-card" wx:for="{{categoryNews}}" wx:key="type">
-        <view class="category-header">
-          <view class="category-icon">{{item.icon}}</view>
-          <view class="category-title">{{item.title}}</view>
-          <view class="category-count">{{item.count}}条</view>
-        </view>
-        <view class="category-content">
-          <view class="category-news-item" wx:for="{{item.news}}" wx:for-item="newsItem" wx:key="id">
-            <view class="news-item-title">{{newsItem.title}}</view>
-            <view class="news-item-meta" wx:if="{{newsItem.detail}}">
-              <text class="market-change {{newsItem.detailType}}">{{newsItem.detail}}</text>
-            </view>
-            <view class="news-item-time">{{newsItem.time}}</view>
-          </view>
-        </view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 盘中分析内容 -->
-  <view wx:if="{{activePhase === 'intraday'}}">
-    <view class="flash-header">
-      <view class="flash-live-indicator">
-        <view class="live-dot"></view>
-        <text class="live-text">盘中快讯</text>
-      </view>
-    </view>
-
-    <view class="flash-pin" wx:for="{{newsFlash}}" wx:key="id" wx:if="{{item.isPin}}">
-      <view class="pin-tag">重要</view>
-      <view class="pin-content">
-        <view class="pin-title">{{item.title}}</view>
-        <view class="pin-meta">
-          <text class="tag tag-{{item.category}}">{{item.category}}</text>
-          <text class="time">{{item.time}}</text>
-        </view>
-      </view>
-    </view>
-
-    <view class="section-title">实时资讯</view>
+    <!-- 盘中快讯 -->
+    <view class="section-title">盘中快讯</view>
     <news-flash newsList="{{newsFlash}}"></news-flash>
   </view>
 
-  <!-- 盘后复盘内容 -->
+  <!-- ==================== 盘后复盘 - 总结为主 ==================== -->
   <view wx:if="{{activePhase === 'closing'}}">
-    <!-- 收盘时间提示 -->
-    <view class="closing-header">
-      <view class="closing-time-badge">
-        <text class="closing-icon">📊</text>
-        <text class="closing-text">收盘复盘 · {{lastUpdate}}</text>
+    <!-- AI复盘建议 -->
+    <view class="ai-dashboard" wx:if="{{aiData.conclusion}}">
+      <view class="ai-dashboard-header">
+        <view class="ai-badge">AI 复盘</view>
+        <view class="ai-update-time">盘后智能总结</view>
       </view>
-    </view>
-
-    <!-- 指数一览 -->
-    <view class="closing-indices-card">
-      <view class="indices-grid">
-        <view class="index-item" wx:for="{{chinaIndices}}" wx:key="code">
-          <view class="index-name">{{item.name}}</view>
-          <view class="index-price {{item.changePercent >= 0 ? 'rise' : 'fall'}}">
-            {{item.current > 0 ? item.current.toLocaleString() : '--'}}
-          </view>
-          <view class="index-change {{item.changePercent >= 0 ? 'rise' : 'fall'}}">
-            {{item.changePercent >= 0 ? '+' : ''}}{{item.changePercent}}%
-          </view>
+      <view class="ai-conclusion">{{aiData.conclusion}}</view>
+      <view class="ai-signals">
+        <view class="signal-item">
+          <view class="signal-label">明日方向</view>
+          <view class="signal-value {{aiData.direction === '看多' ? 'signal-buy' : aiData.direction === '看空' ? 'signal-sell' : 'signal-hold'}}">{{aiData.direction || '观望'}} {{aiData.direction === '看多' ? '↑' : aiData.direction === '看空' ? '↓' : '→'}}</view>
         </view>
+        <view class="signal-item">
+          <view class="signal-label">操作建议</view>
+          <view class="signal-value signal-hold">{{aiData.suggestion || '观望'}}</view>
+        </view>
+        <view class="signal-item">
+          <view class="signal-label">建议仓位</view>
+          <view class="signal-value">{{aiData.targetPosition || '50%'}}</view>
+        </view>
+      </view>
+      <view class="ai-risk-warning" wx:if="{{aiData.riskWarning}}">
+        <text class="risk-icon">!</text>
+        <text class="risk-text">{{aiData.riskWarning}}</text>
       </view>
     </view>
 
     <!-- 今日概况 -->
     <view class="closing-summary-card">
       <view class="summary-header">
-        <text class="summary-title">📈 今日概况</text>
+        <text class="summary-title">今日概况</text>
       </view>
       <view class="summary-grid">
         <view class="summary-col">
           <view class="summary-label">上涨</view>
-          <view class="summary-value rise">{{upCount}}只</view>
+          <view class="summary-value rise">{{upCount || 0}}只</view>
         </view>
         <view class="summary-divider"></view>
         <view class="summary-col">
           <view class="summary-label">下跌</view>
-          <view class="summary-value fall">{{downCount}}只</view>
+          <view class="summary-value fall">{{downCount || 0}}只</view>
         </view>
         <view class="summary-divider"></view>
         <view class="summary-col">
           <view class="summary-label">涨跌比</view>
-          <view class="summary-value {{upDownRatio >= 50 ? 'rise' : 'fall'}}">{{upDownRatio}}%</view>
+          <view class="summary-value {{upDownRatio >= 50 ? 'rise' : 'fall'}}">{{upDownRatio || 50}}%</view>
         </view>
       </view>
       <view class="volume-row" wx:if="{{totalVolumeFormatted}}">
         <text class="volume-label">成交额</text>
         <text class="volume-value">{{totalVolumeFormatted}}</text>
       </view>
-      <!-- 涨跌分布条 -->
       <view class="updown-bar-container">
         <view class="updown-bar">
-          <view class="updown-up" style="width: {{upDownRatio}}%;"></view>
-          <view class="updown-down" style="width: {{100 - upDownRatio}}%;"></view>
+          <view class="updown-up" style="width: {{upDownRatio || 50}}%;"></view>
+          <view class="updown-down" style="width: {{100 - (upDownRatio || 50)}}%;"></view>
         </view>
       </view>
     </view>
 
-    <!-- 市场情绪 -->
-    <view class="sentiment-summary-card">
-      <view class="sentiment-header">
-        <text class="sentiment-title">🎯 今日情绪</text>
-        <view class="sentiment-badge {{sentiment.value >= 50 ? 'greed' : 'fear'}}">
-          {{sentiment.level}}
-        </view>
+    <!-- 收盘情绪 -->
+    <view class="sentiment-gauge">
+      <view class="gauge-header">
+        <view class="gauge-title">收盘情绪</view>
+        <view class="gauge-value {{sentiment.value >= 60 ? 'gauge-greed' : 'gauge-fear'}}">{{sentiment.value || 50}} - {{sentiment.level || '中性'}}</view>
       </view>
-      <view class="sentiment-meter">
-        <view class="meter-bar">
-          <view class="meter-fill {{sentiment.value >= 50 ? 'greed' : 'fear'}}" style="width: {{sentiment.value}}%;"></view>
-          <view class="meter-pointer" style="left: {{sentiment.value}}%;"></view>
-        </view>
+      <view class="gauge-bar">
+        <view class="gauge-marker" style="left: {{sentiment.value || 50}}%;"></view>
       </view>
-      <view class="sentiment-factors-row">
-        <view class="factor-badge">
-          <text>VIX {{sentiment.factors.volatility || '--'}}</text>
-        </view>
-        <view class="factor-badge">
-          <text>恐惧贪婪 {{sentiment.factors.fearGreed || '--'}}</text>
-        </view>
-        <view class="factor-badge">
-          <text>涨跌比 {{sentiment.factors.advanceDecline || '--'}}</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 资金流向摘要 -->
-    <view class="flow-summary-card">
-      <view class="flow-header">
-        <text class="flow-title">💰 资金动向</text>
-      </view>
-      <view class="flow-row">
-        <view class="flow-item">
-          <text class="flow-label">北向资金</text>
-          <text class="flow-value {{fundFlow.northFlow >= 0 ? 'rise' : 'fall'}}">
-            {{fundFlow.northFlow >= 0 ? '+' : ''}}{{fundFlow.northFlow}}亿
-          </text>
-        </view>
-        <view class="flow-item">
-          <text class="flow-label">主力净流入</text>
-          <text class="flow-value {{fundFlow.mainFlow >= 0 ? 'rise' : 'fall'}}">
-            {{fundFlow.mainFlow >= 0 ? '+' : ''}}{{fundFlow.mainFlow}}亿
-          </text>
-        </view>
+      <view class="gauge-labels">
+        <text>极度恐惧</text>
+        <text>恐惧</text>
+        <text>中性</text>
+        <text>贪婪</text>
+        <text>极度贪婪</text>
       </view>
     </view>
 
     <!-- 龙虎榜 -->
     <view class="closing-section">
       <view class="section-header">
-        <text class="section-title">🐉 龙虎榜</text>
-        <text class="section-count">{{dragonTigerList.length}}只</text>
+        <text class="section-title">龙虎榜</text>
+        <text class="section-count">{{dragonTigerList.length || 0}}只</text>
       </view>
       <view class="dragon-tiger-list">
         <view class="dt-item" wx:if="{{dragonTigerList.length > 0}}" wx:for="{{dragonTigerList}}" wx:key="code">
@@ -386,39 +305,6 @@
         </view>
         <view class="dt-empty" wx:if="{{dragonTigerList.length === 0}}">
           <text>暂无龙虎榜数据</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- AI 复盘建议 -->
-    <view class="ai-closing-card" wx:if="{{aiData.conclusion}}">
-      <view class="ai-header">
-        <text class="ai-icon">🤖</text>
-        <text class="ai-title">AI 复盘建议</text>
-      </view>
-      <view class="ai-conclusion-text">{{aiData.conclusion}}</view>
-      <view class="ai-risk-line" wx:if="{{aiData.riskWarning}}">
-        <text class="risk-icon-small">⚠️</text>
-        <text class="risk-text-small">{{aiData.riskWarning}}</text>
-      </view>
-      <view class="ai-levels-row" wx:if="{{aiData.keyLevels}}">
-        <view class="level-col">
-          <text class="level-col-label">支撑位</text>
-          <text class="level-col-value support">{{aiData.keyLevels.support || '--'}}</text>
-        </view>
-        <view class="level-col">
-          <text class="level-col-label">压力位</text>
-          <text class="level-col-value resistance">{{aiData.keyLevels.resistance || '--'}}</text>
-        </view>
-      </view>
-      <view class="ai-actions">
-        <view class="ai-action">
-          <text class="action-label">明日建议</text>
-          <text class="action-value">{{aiData.direction}} · {{aiData.suggestion}}</text>
-        </view>
-        <view class="ai-action">
-          <text class="action-label">建议仓位</text>
-          <text class="action-value">{{aiData.targetPosition}}</text>
         </view>
       </view>
     </view>
