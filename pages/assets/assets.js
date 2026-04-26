@@ -62,7 +62,7 @@ Page({
       refreshSuccess = false;
     }
 
-    const stats = await assetService.calculateStatistics({}, { includeRiskMetrics: false });
+    const stats = assetService.calculateStatistics();
     const show = assetService.getAmountVisibility();
 
     // 更新分类统计

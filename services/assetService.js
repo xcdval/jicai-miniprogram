@@ -38,11 +38,9 @@ function saveAssets(assets) {
 }
 
 /**
- * 计算资产统计信息
- * @param {Object} marketQuotes - 市场行情数据（可选）
- * @param {Object} options - 可选参数 { includeRiskMetrics: boolean }
+ * 基础资产统计计算（同步，不含风险指标）
  */
-async function calculateStatistics(marketQuotes = {}, options = {}) {
+function calculateBasicStats() {
   const assets = getAssets();
   let totalValue = 0;
   let totalCost = 0;
@@ -69,19 +67,9 @@ async function calculateStatistics(marketQuotes = {}, options = {}) {
         todayProfit = parseFloat((todayProfit + yearlyIncome / 365).toFixed(2));
       } else {
         cost = (asset.costPrice || 0) * (asset.shares || 0);
+        value = (asset.currentPrice || asset.costPrice || 0) * (asset.shares || 0);
+        todayChangePercent = asset.todayChangePercent || 0;
 
-        // 从行情获取当前价格和今日涨跌幅
-        const quote = marketQuotes[asset.code];
-        if (quote) {
-          value = (quote.current || asset.currentPrice || asset.costPrice || 0) * (asset.shares || 0);
-          todayChangePercent = quote.changePercent || 0;
-        } else {
-          value = (asset.currentPrice || asset.costPrice || 0) * (asset.shares || 0);
-          // 使用缓存的今日涨跌幅
-          todayChangePercent = asset.todayChangePercent || 0;
-        }
-
-        // 计算今日盈亏
         const todayChangeValue = parseFloat((value * todayChangePercent / 100).toFixed(2));
         todayProfit = parseFloat((todayProfit + todayChangeValue).toFixed(2));
         categoryStats[asset.type].todayProfit = parseFloat(((categoryStats[asset.type].todayProfit || 0) + todayChangeValue).toFixed(2));
@@ -90,14 +78,12 @@ async function calculateStatistics(marketQuotes = {}, options = {}) {
       totalValue += value;
       totalCost += cost;
 
-      // 按类型统计
       if (categoryStats[asset.type]) {
         categoryStats[asset.type].value += value;
         categoryStats[asset.type].cost += cost;
         categoryStats[asset.type].count += 1;
       }
 
-      // 保存资产计算数据
       const profit = value - cost;
       const profitPercent = cost > 0 ? parseFloat((profit / cost * 100).toFixed(2)) : 0;
 
@@ -117,27 +103,6 @@ async function calculateStatistics(marketQuotes = {}, options = {}) {
   const totalProfit = totalValue - totalCost;
   const totalProfitPercent = totalCost > 0 ? parseFloat((totalProfit / totalCost * 100).toFixed(2)) : 0;
 
-  // 计算风险指标（夏普比率、波动率）
-  let sharpeRatio = 0;
-  let volatility = 0;
-
-  if (options.includeRiskMetrics !== false) {
-    try {
-      const marketService = require('./marketService');
-      const funds = assets.groups.flatMap(g =>
-        g.assets.filter(a => a.type === 'FUND').map(a => ({ code: a.code, name: a.name }))
-      );
-
-      if (funds.length > 0) {
-        const stats = await marketService.getFundStatistics(funds);
-        sharpeRatio = stats.sharpeRatio;
-        volatility = stats.volatility;
-      }
-    } catch (e) {
-      console.error('计算风险指标失败:', e);
-    }
-  }
-
   return {
     totalValue,
     totalCost,
@@ -146,26 +111,28 @@ async function calculateStatistics(marketQuotes = {}, options = {}) {
     todayProfit,
     categoryStats,
     assetMetrics,
-    sharpeRatio,
-    volatility,
     updateTime: new Date().toLocaleString('zh-CN')
   };
 }
 
 /**
+ * 计算资产统计信息
+ * @param {Object} marketQuotes - 市场行情数据（可选）
+ * @param {Object} options - 可选参数 { includeRiskMetrics: boolean }
+ */
+function calculateStatistics(marketQuotes = {}, options = {}) {
+  return calculateBasicStats();
+}
+
+/**
  * 获取收益排行榜
- * @param {string} sortBy - 排序字段：profit(盈亏额)、profitPercent(收益率)
- * @param {number} limit - 返回数量
- * @returns {Array} 排序后的资产列表
  */
 function getProfitRanking(sortBy = 'profit', limit = 10) {
   const stats = calculateStatistics();
   const assets = stats.assetMetrics || [];
 
-  // 过滤掉存款（存款收益率固定，不参与排行）
   const filtered = assets.filter(a => a.type !== 'DEPOSIT');
 
-  // 排序
   filtered.sort((a, b) => {
     if (sortBy === 'profitPercent') {
       return (b.profitPercent || 0) - (a.profitPercent || 0);
@@ -186,7 +153,6 @@ function getProfitRanking(sortBy = 'profit', limit = 10) {
 
 /**
  * 计算持仓健康评分
- * @returns {Object} 健康评分及相关建议
  */
 function calculateHealthScore() {
   const stats = calculateStatistics();
@@ -195,7 +161,6 @@ function calculateHealthScore() {
   let score = 100;
   const suggestions = [];
 
-  // 1. 检查分散度（持仓数量）
   const totalCount = (categoryStats.FUND?.count || 0) +
                      (categoryStats.STOCK?.count || 0) +
                      (categoryStats.DEPOSIT?.count || 0);
@@ -208,10 +173,9 @@ function calculateHealthScore() {
       content: '建议增加持仓品种，分散投资风险。当前持仓 ' + totalCount + ' 种。'
     });
   } else if (totalCount >= 5 && totalCount <= 15) {
-    score += 5; // 适当分散
+    score += 5;
   }
 
-  // 2. 检查存款比例（防御性配置）
   const depositRatio = totalValue > 0 ? (categoryStats.DEPOSIT?.value || 0) / totalValue * 100 : 0;
   if (depositRatio < 10) {
     score -= 10;
@@ -231,7 +195,6 @@ function calculateHealthScore() {
     });
   }
 
-  // 3. 检查股票比例（高风险资产）
   const stockRatio = totalValue > 0 ? (categoryStats.STOCK?.value || 0) / totalValue * 100 : 0;
   if (stockRatio > 60) {
     score -= 15;
@@ -242,7 +205,6 @@ function calculateHealthScore() {
     });
   }
 
-  // 4. 检查基金是否有持仓
   if (categoryStats.FUND?.count === 0 && categoryStats.STOCK?.count === 0) {
     score -= 20;
     suggestions.push({
@@ -252,7 +214,6 @@ function calculateHealthScore() {
     });
   }
 
-  // 5. 检查总体盈亏
   const { totalProfitPercent } = stats;
   if (totalProfitPercent > 20) {
     suggestions.push({
@@ -268,15 +229,12 @@ function calculateHealthScore() {
     });
   }
 
-  // 确保分数在 0-100 范围内
   score = Math.max(0, Math.min(100, score));
 
-  // 确定颜色
-  let color = '#10b981'; // 绿色
-  if (score < 60) color = '#ef4444'; // 红色
-  else if (score < 75) color = '#f59e0b'; // 黄色
+  let color = '#10b981';
+  if (score < 60) color = '#ef4444';
+  else if (score < 75) color = '#f59e0b';
 
-  // 生成描述
   let desc = '持仓结构合理';
   if (score >= 85) desc = '持仓结构优秀，继续保持';
   else if (score >= 75) desc = '持仓结构良好，建议适度优化';
@@ -321,7 +279,6 @@ function addAsset(groupId, asset) {
     return { success: false, message: '分组不存在' };
   }
 
-  // 生成唯一ID
   asset.id = `${asset.type.toLowerCase()}_${Date.now()}`;
 
   group.assets.push(asset);
@@ -385,7 +342,7 @@ function getAmountVisibility() {
 }
 
 /**
- * 按类型获取资产（基金/股票/存款）
+ * 按类型获取资产
  */
 function getAssetsByType(type) {
   const assets = getAssets();
@@ -408,15 +365,11 @@ function getAssetsByType(type) {
 
 /**
  * 计算单个资产的市值和盈亏
- * @param {Object} asset - 资产对象
- * @param {number} todayChangePercent - 今日涨跌幅（%），默认为0
- * @returns {Object} 包含计算后字段的资产对象
  */
 function calculateAssetMetrics(asset, todayChangePercent = 0) {
   const result = { ...asset };
 
   if (asset.type === 'DEPOSIT') {
-    // 存款计算
     const depositAmount = asset.amount || 0;
     const annualRate = asset.annualRate || 0;
     const days = getDepositDays(asset);
@@ -431,7 +384,6 @@ function calculateAssetMetrics(asset, todayChangePercent = 0) {
     result.nav = annualRate.toFixed(2);
     result.holdings = depositAmount;
   } else {
-    // 基金和股票计算
     const shares = parseFloat(asset.shares) || 0;
     const costPrice = parseFloat(asset.costPrice) || 0;
     const currentPrice = parseFloat(asset.currentPrice) || costPrice;
@@ -461,9 +413,6 @@ function getDepositDays(asset) {
 
 /**
  * 按类型获取资产（带计算字段）
- * @param {string} type - 资产类型 FUND/STOCK/DEPOSIT
- * @param {number} todayChangePercent - 今日涨跌幅（默认0）
- * @returns {Array} 带计算字段的资产列表
  */
 function getEnrichedAssetsByType(type, todayChangePercent = 0) {
   const rawAssets = getAssetsByType(type);
@@ -481,18 +430,16 @@ function getFundsByCategory(category) {
 }
 
 /**
- * 初始化数据（首次使用）
+ * 初始化数据
  */
 function initData() {
   const mock = require('../utils/mock');
 
-  // 检查是否已初始化
   const existing = getAssets();
   if (existing.groups && existing.groups.length > 0) {
     return false;
   }
 
-  // 使用默认数据初始化
   saveAssets(mock.defaultAssets);
   saveGroups(mock.defaultAssets.groups.map(g => ({
     id: g.id,
@@ -575,18 +522,16 @@ async function refreshAssetPrices() {
     });
   });
 
-  // 获取行情
   const quotes = await marketService.getAssetQuotes(allAssets);
 
-  // 更新资产价格和今日涨跌幅
   let updated = false;
   assets.groups.forEach(group => {
     group.assets.forEach(asset => {
       if ((asset.type === 'FUND' || asset.type === 'STOCK') && quotes[asset.code]) {
         const quote = quotes[asset.code];
         asset.currentPrice = quote.current || asset.currentPrice;
-        asset.todayChangePercent = quote.changePercent || 0; // 保存今日涨跌幅
-        asset.name = quote.name || asset.name; // 更新名称
+        asset.todayChangePercent = quote.changePercent || 0;
+        asset.name = quote.name || asset.name;
         updated = true;
       }
     });
@@ -610,12 +555,45 @@ async function refreshAssetPrices() {
   return { success: true, updated, quotes };
 }
 
+/**
+ * 计算高级统计指标（异步，包含夏普比率和波动率）
+ */
+async function calculateAdvancedStats() {
+  const basicStats = calculateBasicStats();
+
+  // 计算风险指标
+  let sharpeRatio = 0;
+  let volatility = 0;
+
+  try {
+    const assets = getAssets();
+    const funds = assets.groups.flatMap(g =>
+      g.assets.filter(a => a.type === 'FUND').map(a => ({ code: a.code, name: a.name }))
+    );
+
+    if (funds.length > 0) {
+      const stats = await marketService.getFundStatistics(funds);
+      sharpeRatio = stats.sharpeRatio;
+      volatility = stats.volatility;
+    }
+  } catch (e) {
+    console.error('计算风险指标失败:', e);
+  }
+
+  return {
+    ...basicStats,
+    sharpeRatio,
+    volatility
+  };
+}
+
 module.exports = {
   getGroups,
   saveGroups,
   getAssets,
   saveAssets,
   calculateStatistics,
+  calculateAdvancedStats,
   getAssetsByGroup,
   getAssetsByType,
   getEnrichedAssetsByType,

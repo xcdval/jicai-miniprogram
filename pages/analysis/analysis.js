@@ -155,7 +155,7 @@ Page({
       console.error('刷新行情失败:', e);
     }
 
-    const stats = await assetService.calculateStatistics({}, { includeRiskMetrics: true });
+    const stats = await assetService.calculateAdvancedStats();
     const todayP = stats.todayProfit || 0;
     const monthP = parseFloat((todayP * 22).toFixed(2));
     const yearP = stats.totalProfit || 0;
