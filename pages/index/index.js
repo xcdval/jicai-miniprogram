@@ -102,7 +102,7 @@ Page({
     try {
       this.setData({ isPriceRefreshing: true });
       await assetService.refreshAssetPrices();
-      const stats = assetService.calculateStatistics();
+      const stats = await assetService.calculateStatistics({}, { includeRiskMetrics: false });
       const showAmount = assetService.getAmountVisibility();
 
       this.setData({
@@ -176,9 +176,6 @@ Page({
 
     // 刷新资产统计
     this.refreshData();
-
-    // 生成今日走势数据
-    this.generateTodayTrendData();
   },
 
   // 加载市场行情
@@ -226,8 +223,8 @@ Page({
   },
 
   // 生成今日走势数据（基于资产统计模拟）
-  generateTodayTrendData() {
-    const stats = assetService.calculateStatistics();
+  async generateTodayTrendData() {
+    const stats = await assetService.calculateStatistics({}, { includeRiskMetrics: false });
     const baseValue = stats.totalValue || 100000;
     const startHour = 9;
     const endHour = new Date().getHours() || 15;
@@ -350,7 +347,7 @@ Page({
       console.error('刷新行情失败:', e);
     }
 
-    const stats = assetService.calculateStatistics();
+    const stats = await assetService.calculateStatistics({}, { includeRiskMetrics: false });
     const showAmount = assetService.getAmountVisibility();
 
     this.setData({
