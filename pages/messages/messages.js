@@ -3,6 +3,8 @@ const notificationService = require('../../services/notificationService');
 
 Page({
   data: {
+    statusBarHeight: 44,
+    navBarHeight: 44,
     activeTab: 'notifications',
     notifications: [],
     reminders: [],
@@ -10,7 +12,22 @@ Page({
   },
 
   onLoad() {
+    this.initSystemInfo();
     this.loadData();
+  },
+
+  initSystemInfo() {
+    const systemInfo = wx.getSystemInfoSync();
+    const menuButtonInfo = wx.getMenuButtonBoundingClientRect();
+
+    this.setData({
+      statusBarHeight: systemInfo.statusBarHeight,
+      navBarHeight: (menuButtonInfo.top - systemInfo.statusBarHeight) * 2 + menuButtonInfo.height
+    });
+  },
+
+  goBack() {
+    wx.navigateBack();
   },
 
   onShow() {

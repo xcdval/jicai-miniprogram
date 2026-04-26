@@ -1,4 +1,19 @@
 <view class="container">
+  <!-- 状态栏 -->
+  <view class="status-bar" style="height: {{statusBarHeight}}px;">
+    <text class="status-time">9:41</text>
+    <text class="status-dots">●●●</text>
+  </view>
+
+  <!-- 导航栏 -->
+  <view class="nav-bar" style="height: {{navBarHeight}}px;">
+    <view class="nav-btn back-btn" bindtap="goBack">
+      <text class="back-icon">‹</text>
+    </view>
+    <view class="nav-title">消息中心</view>
+    <view class="nav-btn" style="visibility: hidden;"></view>
+  </view>
+
   <!-- 顶部 Tab -->
   <view class="tab-header">
     <view class="tab-item {{activeTab === 'notifications' ? 'active' : ''}}" bindtap="switchTab" data-tab="notifications">
