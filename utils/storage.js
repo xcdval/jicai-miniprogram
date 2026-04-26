@@ -9,7 +9,9 @@ const STORAGE_KEYS = {
   INTELLIGENCE_CACHE: 'intel_cache',  // 情报缓存
   USER_PREFERENCES: 'user_prefs',     // 用户偏好
   MARKET_DATA: 'market_data',         // 市场行情缓存
-  ANALYSIS_CACHE: 'analysis_cache'    // 分析数据缓存
+  ANALYSIS_CACHE: 'analysis_cache',   // 分析数据缓存
+  NOTIFICATIONS: 'notifications',     // 通知列表
+  REMINDERS: 'reminders'              // 提醒配置
 };
 
 /**

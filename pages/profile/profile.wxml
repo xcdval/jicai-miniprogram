@@ -94,6 +94,13 @@
       </view>
       <view class="menu-arrow">›</view>
     </view>
+    <view class="menu-item" bindtap="importFromFile">
+      <view class="menu-left">
+        <view class="menu-icon">📁</view>
+        <text class="menu-text">CSV批量导入</text>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
     <view class="menu-item" bindtap="showStorageInfo">
       <view class="menu-left">
         <view class="menu-icon">💾</view>

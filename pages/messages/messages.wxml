@@ -1,0 +1,78 @@
+<view class="container">
+  <!-- 顶部 Tab -->
+  <view class="tab-header">
+    <view class="tab-item {{activeTab === 'notifications' ? 'active' : ''}}" bindtap="switchTab" data-tab="notifications">
+      <text>通知</text>
+      <view class="tab-badge" wx:if="{{unreadCount > 0}}">{{unreadCount > 99 ? '99+' : unreadCount}}</view>
+    </view>
+    <view class="tab-item {{activeTab === 'reminders' ? 'active' : ''}}" bindtap="switchTab" data-tab="reminders">
+      <text>提醒</text>
+    </view>
+  </view>
+
+  <!-- 通知列表 -->
+  <view class="content" wx:if="{{activeTab === 'notifications'}}">
+    <view class="empty-state" wx:if="{{notifications.length === 0}}">
+      <text class="empty-icon">🔔</text>
+      <text class="empty-text">暂无通知</text>
+      <text class="empty-desc">设置价格提醒后，将在达到阈值时收到通知</text>
+    </view>
+
+    <view class="notification-list" wx:else>
+      <view class="notification-item {{item.read ? 'read' : ''}}" wx:for="{{notifications}}" wx:key="id">
+        <view class="notification-icon-wrap {{item.type}}">
+          <text class="notification-icon">{{getNotificationIcon(item.type)}}</text>
+        </view>
+        <view class="notification-content" bindtap="onNotificationTap" data-id="{{item.id}}">
+          <view class="notification-header">
+            <text class="notification-title">{{item.title}}</text>
+            <text class="notification-time">{{formatTime(item.timestamp)}}</text>
+          </view>
+          <text class="notification-body">{{item.content}}</text>
+          <view class="notification-footer">
+            <view class="notification-tag {{item.priority}}">{{getPriorityText(item.priority)}}</view>
+          </view>
+        </view>
+        <view class="notification-actions">
+          <view class="action-btn delete" bindtap="deleteNotification" data-id="{{item.id}}">×</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="bottom-actions" wx:if="{{notifications.length > 0}}">
+      <view class="action-link" bindtap="markAllRead">全部标为已读</view>
+      <view class="action-link danger" bindtap="clearAll">清空通知</view>
+    </view>
+  </view>
+
+  <!-- 提醒列表 -->
+  <view class="content" wx:if="{{activeTab === 'reminders'}}">
+    <view class="empty-state" wx:if="{{reminders.length === 0}}">
+      <text class="empty-icon">⏰</text>
+      <text class="empty-text">暂无提醒</text>
+      <text class="empty-desc">在持仓详情页设置价格或涨跌幅提醒</text>
+    </view>
+
+    <view class="reminder-list" wx:else>
+      <view class="reminder-item {{item.enabled ? '' : 'disabled'}}" wx:for="{{reminders}}" wx:key="id">
+        <view class="reminder-info">
+          <view class="reminder-header">
+            <text class="reminder-name">{{item.assetName || item.assetCode}}</text>
+            <view class="reminder-type-tag">{{getAlertTypeText(item.alertType)}}</view>
+          </view>
+          <text class="reminder-condition">{{getConditionText(item)}}</text>
+          <text class="reminder-created">创建于 {{formatDate(item.createdAt)}}</text>
+        </view>
+        <view class="reminder-actions">
+          <switch checked="{{item.enabled}}" bindchange="onReminderToggle" data-id="{{item.id}}" color="#8B5CF6"/>
+          <view class="action-btn delete" bindtap="deleteReminder" data-id="{{item.id}}">×</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="info-card" wx:if="{{reminders.length > 0}}">
+      <text class="info-title">💡 提示</text>
+      <text class="info-text">提醒在达到阈值时自动触发，每天最多触发一次。关闭提醒后将不再检查。</text>
+    </view>
+  </view>
+</view>

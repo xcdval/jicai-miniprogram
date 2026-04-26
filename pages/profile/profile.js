@@ -1,6 +1,8 @@
 const assetService = require('../../services/assetService');
 const intelligenceService = require('../../services/intelligenceService');
 const ocrService = require('../../services/ocrService');
+const notificationService = require('../../services/notificationService');
+const fileParser = require('../../services/fileParser');
 
 Page({
   data: {
@@ -42,14 +44,17 @@ Page({
   loadUserData() {
     // 从本地存储加载用户数据
     const userData = wx.getStorageSync('userData');
+    const reminderCount = notificationService.getUnreadCount();
     if (userData) {
       this.setData({
         usageDays: userData.usageDays || 128,
         assetCount: userData.assetCount || 8,
         platformCount: userData.platformCount || 5,
         healthScore: userData.healthScore || 82,
-        reminderCount: userData.reminderCount || 12
+        reminderCount: reminderCount
       });
+    } else {
+      this.setData({ reminderCount });
     }
   },
   loadDeepseekConfig() {
@@ -75,8 +80,14 @@ Page({
   },
   navigateTo(e) {
     const page = e.currentTarget.dataset.page;
+
+    // 消息中心跳转
+    if (page === 'messages') {
+      wx.navigateTo({ url: '/pages/messages/messages' });
+      return;
+    }
+
     const featureInfo = {
-      messages: '消息中心 - 即将支持订单提醒、价格警报',
       statistics: '资产统计 - 详细分析报告功能',
       strategy: '投资策略 - 个性化投资建议'
     };
@@ -173,8 +184,22 @@ Page({
     }
   },
 
-  // 导入数据
+  // 导入数据（选择方式）
   importData() {
+    wx.showActionSheet({
+      itemList: ['从剪贴板导入 (JSON)', '从文件导入 (CSV)'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          this.importFromClipboard();
+        } else {
+          this.importFromFile();
+        }
+      }
+    });
+  },
+
+  // 从剪贴板导入（JSON）
+  importFromClipboard() {
     wx.showModal({
       title: '导入数据',
       content: '此操作将覆盖现有数据，请确保已备份。粘贴数据后点击确定。',
@@ -196,6 +221,89 @@ Page({
             wx.showToast({ title: '数据格式错误', icon: 'none' });
           }
         }
+      }
+    });
+  },
+
+  // 从文件导入（CSV）
+  importFromFile() {
+    wx.chooseMessageFile({
+      count: 1,
+      type: 'file',
+      success: (res) => {
+        const file = res.tempFiles[0];
+        const fileName = file.name.toLowerCase();
+
+        // 检查文件类型
+        if (!fileName.endsWith('.csv') && !fileName.endsWith('.txt')) {
+          wx.showModal({
+            title: '不支持的文件格式',
+            content: '请使用 CSV 格式文件（.csv）导入数据',
+            showCancel: false
+          });
+          return;
+        }
+
+        wx.showLoading({ title: '解析中...' });
+
+        // 读取文件内容
+        const fs = wx.getFileSystemManager();
+        fs.readFile({
+          filePath: file.path,
+          encoding: 'utf8',
+          success: (readRes) => {
+            const parseResult = fileParser.parseCSV(readRes.data);
+
+            if (!parseResult.success) {
+              wx.hideLoading();
+              wx.showModal({
+                title: '解析失败',
+                content: parseResult.message,
+                showCancel: false
+              });
+              return;
+            }
+
+            // 显示预览
+            wx.hideLoading();
+            const previewText = parseResult.data.slice(0, 5).map((a, i) =>
+              `${i + 1}. ${a.name || a.code} (${a.code}) - ${a.shares}份`
+            ).join('\n');
+
+            wx.showModal({
+              title: '导入预览',
+              content: `共 ${parseResult.data.length} 条资产\n\n前5条预览：\n${previewText}\n\n是否继续导入？`,
+              success: (confirmRes) => {
+                if (confirmRes.confirm) {
+                  wx.showLoading({ title: '导入中...' });
+
+                  const importResult = fileParser.importAssets(parseResult.data);
+
+                  wx.hideLoading();
+
+                  if (importResult.success) {
+                    wx.showModal({
+                      title: '导入成功',
+                      content: `成功导入 ${importResult.imported} 条资产`,
+                      showCancel: false
+                    });
+                    this.loadUserData();
+                  } else {
+                    wx.showModal({
+                      title: '部分导入失败',
+                      content: `成功 ${importResult.imported} 条，失败 ${importResult.failed} 条\n\n${importResult.errors[0] || ''}`,
+                      showCancel: false
+                    });
+                  }
+                }
+              }
+            });
+          },
+          fail: (err) => {
+            wx.hideLoading();
+            wx.showToast({ title: '文件读取失败', icon: 'none' });
+          }
+        });
       }
     });
   },

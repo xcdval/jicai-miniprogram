@@ -6,6 +6,7 @@
 const storage = require('../utils/storage');
 const format = require('../utils/format');
 const marketService = require('./marketService');
+const notificationService = require('./notificationService');
 
 /**
  * 获取所有资产分组
@@ -68,13 +69,15 @@ function calculateStatistics(marketQuotes = {}) {
       } else {
         cost = (asset.costPrice || 0) * (asset.shares || 0);
 
-        // 从行情获取当前价格
+        // 从行情获取当前价格和今日涨跌幅
         const quote = marketQuotes[asset.code];
         if (quote) {
           value = (quote.current || asset.currentPrice || asset.costPrice || 0) * (asset.shares || 0);
           todayChangePercent = quote.changePercent || 0;
         } else {
           value = (asset.currentPrice || asset.costPrice || 0) * (asset.shares || 0);
+          // 使用缓存的今日涨跌幅
+          todayChangePercent = asset.todayChangePercent || 0;
         }
 
         // 计算今日盈亏
@@ -551,19 +554,15 @@ async function refreshAssetPrices() {
   // 获取行情
   const quotes = await marketService.getAssetQuotes(allAssets);
 
-  // 更新资产价格
+  // 更新资产价格和今日涨跌幅
   let updated = false;
   assets.groups.forEach(group => {
     group.assets.forEach(asset => {
-      if (asset.type === 'FUND' && quotes[asset.code]) {
+      if ((asset.type === 'FUND' || asset.type === 'STOCK') && quotes[asset.code]) {
         const quote = quotes[asset.code];
         asset.currentPrice = quote.current || asset.currentPrice;
+        asset.todayChangePercent = quote.changePercent || 0; // 保存今日涨跌幅
         asset.name = quote.name || asset.name; // 更新名称
-        updated = true;
-      } else if (asset.type === 'STOCK' && quotes[asset.code]) {
-        const quote = quotes[asset.code];
-        asset.currentPrice = quote.current || asset.currentPrice;
-        asset.name = quote.name || asset.name;
         updated = true;
       }
     });
@@ -573,7 +572,18 @@ async function refreshAssetPrices() {
     saveAssets(assets);
   }
 
-  return { success: true, updated };
+  // 检查提醒触发
+  if (updated) {
+    notificationService.checkAllTriggers(quotes);
+  }
+
+  // 检查存款到期提醒
+  const deposits = assets.groups.flatMap(g => g.assets.filter(a => a.type === 'DEPOSIT'));
+  if (deposits.length > 0) {
+    notificationService.checkDepositExpiry(deposits);
+  }
+
+  return { success: true, updated, quotes };
 }
 
 module.exports = {
