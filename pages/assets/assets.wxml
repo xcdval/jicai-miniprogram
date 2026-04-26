@@ -30,16 +30,16 @@
       <view class="profit-item">
         <text class="profit-label">总收益</text>
         <view class="profit-value-row">
-          <text class="profit-amount {{totalProfit >= 0 ? 'rise' : 'fall'}}">{{totalProfit >= 0 ? '+' : ''}}{{totalProfit}}</text>
-          <text class="profit-percent {{totalProfit >= 0 ? 'rise' : 'fall'}}">{{totalProfitPercent >= 0 ? '+' : ''}}{{totalProfitPercent}}%</text>
+          <text class="profit-amount {{totalProfit >= 0 ? 'rise' : 'fall'}}">{{showAmount ? (totalProfit >= 0 ? '+' : '') + totalProfit : '****'}}</text>
+          <text class="profit-percent {{totalProfit >= 0 ? 'rise' : 'fall'}}">{{showAmount ? (totalProfitPercent >= 0 ? '+' : '') + totalProfitPercent + '%' : '****'}}</text>
         </view>
       </view>
       <view class="profit-divider"></view>
       <view class="profit-item">
         <text class="profit-label">今日收益</text>
         <view class="profit-value-row">
-          <text class="profit-amount {{todayProfit >= 0 ? 'rise' : 'fall'}}">{{todayProfit >= 0 ? '+' : ''}}{{todayProfit}}</text>
-          <text class="profit-percent {{todayProfit >= 0 ? 'rise' : 'fall'}}">{{todayProfitPercent >= 0 ? '+' : ''}}{{todayProfitPercent}}%</text>
+          <text class="profit-amount {{todayProfit >= 0 ? 'rise' : 'fall'}}">{{showAmount ? (todayProfit >= 0 ? '+' : '') + todayProfit : '****'}}</text>
+          <text class="profit-percent {{todayProfitPercent >= 0 ? 'rise' : 'fall'}}">{{showAmount ? (todayProfitPercent >= 0 ? '+' : '') + todayProfitPercent + '%' : '****'}}</text>
         </view>
       </view>
     </view>
